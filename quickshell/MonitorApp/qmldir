@@ -1,0 +1,3 @@
+singleton MonitorState 1.0 MonitorState.qml
+ArrangementCanvas 1.0 ArrangementCanvas.qml
+MonitorWindow 1.0 MonitorWindow.qml

@@ -1,0 +1,39 @@
+/*
+Reference for the Quickshell Dock settings.
+
+This file documents the built-in defaults (kept in sync with defaultSettings in
+DockSettings.qml). The dock reads ~/.config/shroomery/settings/dock.json and
+merges it over those defaults, so a partial file still leaves every value
+defined. Copy keys from here into that file to change them.
+*/
+{
+    "dock": {
+        "enabled": true,
+        "autohide": false,
+        "iconSize": 32,
+        "spacing": 8,
+        "marginBottom": 10,
+        "reserveSpace": true
+    },
+    "pill": {
+        "radius": 16,
+        "padding": 12,
+        "animationDuration": 350
+    },
+    "border": {
+        "width": 2,
+        "colorTop": "",
+        "colorBottom": ""
+    },
+    "opacity": {
+        "normal": 0.7
+    },
+    "apps": {
+        "pinned": [
+            "firefox",
+            "kitty",
+            "org.gnome.Nautilus",
+            "org.gnome.Calculator"
+        ]
+    }
+}

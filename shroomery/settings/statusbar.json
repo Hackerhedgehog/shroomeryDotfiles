@@ -1,0 +1,10 @@
+{
+    "bar": {
+        "enabled": true,
+        "alwaysExpanded": true
+    },
+    "taskbar": {
+        "pinned": [],
+        "enabled": true
+    }
+}

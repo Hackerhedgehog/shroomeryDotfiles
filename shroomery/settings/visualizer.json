@@ -1,0 +1,19 @@
+{
+    "barSpacing": 6,
+    "barWidth": 7,
+    "draw": "bars",
+    "inDiameter": 0.9,
+    "inX": 0.5,
+    "inY": 0.5,
+    "lineWidth": 8,
+    "minLength": 40,
+    "monitor": "HDMI-A-1",
+    "outDiameter": 0.396,
+    "outX": 0.5,
+    "outY": 0.5,
+    "outline": 1.5,
+    "sensitivity": 1,
+    "smoothness": 0.5,
+    "style": "center-out",
+    "wallpaperOnly": false
+}

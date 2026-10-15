@@ -1,0 +1,5 @@
+singleton AudioState 1.0 AudioState.qml
+VolumeRow 1.0 VolumeRow.qml
+AudioPanel 1.0 AudioPanel.qml
+singleton LoudnessState 1.0 LoudnessState.qml
+LoudnessCard 1.0 LoudnessCard.qml

@@ -1,0 +1,2 @@
+singleton BluetoothState 1.0 BluetoothState.qml
+BluetoothPanel 1.0 BluetoothPanel.qml

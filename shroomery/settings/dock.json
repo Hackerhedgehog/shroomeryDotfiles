@@ -1,0 +1,13 @@
+{
+    "dock": {
+        "enabled": false,
+        "autohide": false
+    },
+    "apps": {
+        "pinned": [
+            "firefox",
+            "kitty",
+            "dolphin"
+        ]
+    }
+}

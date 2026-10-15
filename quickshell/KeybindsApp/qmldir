@@ -1,0 +1,2 @@
+singleton KeybindsState 1.0 KeybindsState.qml
+KeybindsWindow 1.0 KeybindsWindow.qml
