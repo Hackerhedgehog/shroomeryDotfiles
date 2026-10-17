@@ -1,28 +1,33 @@
 # CLAUDE.md
 
-Quickshell (QML) desktop UI for a personal Arch Linux + Hyprland setup. This
-project is its own thing — no ml4w code or paths. Do not reintroduce
-references to `~/.config/ml4w` or ml4w scripts.
+Personal Arch Linux + Hyprland desktop: Quickshell (QML) UI, shell scripts and
+Hyprland config in one repo. This project is its own thing — no ml4w code or
+paths. Do not reintroduce references to `~/.config/ml4w` or ml4w scripts.
+
+Start with `README.md` here (how the three parts fit together); each part has
+its own README with the details: `quickshell/README.md`, `shroomery/README.md`
+(+ `shroomery/screencolors/README.md`).
 
 ## Rules
 
 - Do not do anything with git (commit, branch, stash, add, mv, …) unless the
   user explicitly asks. Use plain `mv`/`cp`/`rm` for file moves.
-- `~/.config/quickshell` is a real directory with its own `.git`; nothing here may depend on
-  `~/.mydotfiles` or `~/.config/ml4w` (both are meant to be deletable).
-- README.md lists every dependency (files read/written, programs run). Keep it in sync when
-  adding a path to `shared/Paths.qml` or a new external command.
+- This repo lives at `~/shroomeryDotfiles`; `~/.config/{hypr,quickshell,shroomery}` are symlinks
+  into it. Always use the `~/.config/...` paths in code and docs, never the resolved target.
+  Nothing here may depend on `~/.mydotfiles` or `~/.config/ml4w` (both are meant to be deletable).
+- `quickshell/README.md` lists every dependency (files read/written, programs run). Keep it in sync when
+  adding a path to `quickshell/shared/Paths.qml` or a new external command.
 
 ## Where things live
 
 | Directory              | Holds                                                          |
 |------------------------|----------------------------------------------------------------|
-| `~/.config/quickshell` | UI apps only (this repo)                                       |
+| `~/.config/quickshell` | UI apps only (`quickshell/` here)                              |
 | `~/.config/shroomery`  | Shell scripts, theme sync, user settings, generated colors     |
 | `~/.config/hypr`       | The Hyprland desktop (keybinds, autostart, hyprlock, …)        |
 
 shroomery layout:
-- `lib.sh` — shared paths/helpers every script sources (mirror of `shared/Paths.qml`)
+- `lib.sh` — shared paths/helpers every script sources (mirror of `quickshell/shared/Paths.qml`)
 - `notify.sh` — `notify_user` helper sourced by hypr scripts
 - `scripts/` — `wallpaper.sh`, `animated-wallpaper.sh` (mpvpaper: videos/GIFs, paused on battery/gamemode), `wallpaper-thumbnails.sh`, `apply-theme.sh`, `toggle-theme.sh`, `power.sh`,
   `check-updates.sh`, `install-updates.sh`, `system-update.sh`, `autostart.sh`,
@@ -32,13 +37,16 @@ shroomery layout:
 - `listeners/` + `listeners.sh` — background watchers (GTK dark/light → re-theme, low battery, AC plug → pause/resume animated wallpaper, night light schedule)
 - `settings/` — user state: `statusbar.json`, `dock.json`, `wallpaper-*`, `accent`, `accent-index`, `accent-scheme`, `weather-location`,
   `terminal`, `editor`, `launcher`, `launcher-view.json`, `ocr-language`, `visualizer.json`, `night-light.json`, flag files (`gamemode-enabled`, `hide-fastfetch`)
-- `colors/colors.json` — matugen output, read by `shared/Theme.qml`
+- `colors/colors.json` — matugen output, read by `quickshell/shared/Theme.qml`
 - Cache: `~/.cache/shroomery/` (current wallpaper, blurred/square variants for hyprlock/wlogout/LauncherApp)
 
-A script that isn't about drawing UI belongs in shroomery, not here. Its README.md documents
+A script that isn't about drawing UI belongs in shroomery, not in quickshell. `shroomery/README.md` documents
 every script/setting.
 
-## Layout of this repo
+## Layout of quickshell/
+
+Paths in this section and below are relative to `quickshell/` unless they start with `~`.
+Design specs and plans live in `quickshell/docs/superpowers/`.
 
 - `shell.qml` — main shell root; instantiates every app window.
 - `<Name>App/` — one directory per app, each with a `toggle.sh`.
@@ -111,6 +119,8 @@ every script/setting.
 - Statusbar, dock and visualizer aren't panels: their `toggle.sh` open/close map to IPC `enable`/`disable`.
 
 ## Verifying changes
+
+Run the commands below from `~/.config/quickshell`.
 
 - The running `qs` hot-reloads on save. Read its log with `qs log` (or `qs -p ~/.config/quickshell/OverviewApp log`).
   Strip colors with `sed 's/\x1b\[[0-9;]*m//g'` and look for `WARN`/`ERROR` after the last `Configuration Loaded`.
