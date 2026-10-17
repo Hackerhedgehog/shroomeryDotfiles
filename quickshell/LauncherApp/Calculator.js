@@ -2,7 +2,7 @@
 // The launcher's calculator: evaluates what is typed in the search field.
 // Deliberately free of QML imports and of `.pragma library` so the same file
 // loads in QML (`import "Calculator.js" as Calculator`) and in Node for the
-// unit tests (like AudioApp/Loudness.js).
+// unit tests (like AudioPanel/Loudness.js).
 //
 // Grammar (lowest to highest precedence):
 //   expr   := term (("+" | "-") term)*

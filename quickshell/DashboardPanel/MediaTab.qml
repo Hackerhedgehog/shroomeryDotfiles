@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import Quickshell.Services.Mpris
 import qs.shared
 import qs.shared.ui
-import qs.DashboardApp
+import qs.DashboardPanel
 import "Stats.js" as Stats
 
 // Full player for Players.current: round cover art, title/artist/album, a seek bar

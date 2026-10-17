@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Layouts
 import qs.shared
 import qs.shared.ui
-import qs.SettingsApp
 
 // Accent palette. Every choice regenerates the whole matugen palette through
 // apply-theme.sh, which records it in shroomery/settings/ (so it survives a
@@ -12,6 +11,9 @@ import qs.SettingsApp
 ColumnLayout {
     id: picker
     spacing: 10
+
+    Component.onCompleted: AccentState.reload()
+    onVisibleChanged: if (visible) AccentState.reload()
 
     readonly property var swatches: [
         "#fc2f04", "#e8590c", "#f59f00", "#74b816",
@@ -65,22 +67,22 @@ ColumnLayout {
         spacing: 10
 
         Repeater {
-            model: SettingsState.wallpaperColors
+            model: AccentState.wallpaperColors
             delegate: Swatch {
                 required property string modelData
                 required property int index
                 color: modelData
-                selected: SettingsState.accentSource === "wallpaper" && SettingsState.accentIndex === index
-                onClicked: SettingsState.applyWallpaperAccent(index)
+                selected: AccentState.accentSource === "wallpaper" && AccentState.accentIndex === index
+                onClicked: AccentState.applyWallpaperAccent(index)
             }
         }
 
         // No color list yet (wallpaper.sh writes it): one "wallpaper" swatch.
         Swatch {
-            visible: SettingsState.wallpaperColors.length === 0
+            visible: AccentState.wallpaperColors.length === 0
             color: Theme.primary
-            selected: SettingsState.accentSource === "wallpaper"
-            onClicked: SettingsState.applyWallpaperAccent(0)
+            selected: AccentState.accentSource === "wallpaper"
+            onClicked: AccentState.applyWallpaperAccent(0)
         }
     }
 
@@ -95,8 +97,8 @@ ColumnLayout {
             delegate: Swatch {
                 required property string modelData
                 color: modelData
-                selected: SettingsState.accentSource === modelData
-                onClicked: SettingsState.applyAccent(modelData)
+                selected: AccentState.accentSource === modelData
+                onClicked: AccentState.applyAccent(modelData)
             }
         }
     }
@@ -113,9 +115,9 @@ ColumnLayout {
         FieldCombo {
             Layout.preferredWidth: 160
             compact: true
-            model: SettingsState.accentSchemes.map(s => s.label)
-            boundIndex: SettingsState.accentSchemeIndex
-            onActivated: index => SettingsState.applyAccentScheme(SettingsState.accentSchemes[index].value)
+            model: AccentState.accentSchemes.map(s => s.label)
+            boundIndex: AccentState.accentSchemeIndex
+            onActivated: index => AccentState.applyAccentScheme(AccentState.accentSchemes[index].value)
         }
     }
 }

@@ -13,8 +13,8 @@ Singleton {
 
     readonly property string helperPath: Qt.resolvedUrl("nm_helper.py").toString().replace("file://", "")
 
-    // How many panels are currently showing network state. The NetworkApp and
-    // the SettingsApp are independent consumers, so this is a count rather
+    // How many panels are currently showing network state. The NetworkPanel and
+    // the QuickSettingsPanel are independent consumers, so this is a count rather
     // than a flag: closing one must not slow the other's refresh.
     property int openRequests: 0
     readonly property bool panelOpen: openRequests > 0

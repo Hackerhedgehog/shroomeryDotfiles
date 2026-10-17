@@ -3,21 +3,22 @@
 import Quickshell
 import Quickshell.Io
 import QtQuick
-import "PowerApp"
+import "PowerPanel"
 import "WallpaperApp"
 import "StatusbarApp"
-import "DashboardApp"
+import "DashboardPanel"
 import "DockApp"
 import "MonitorApp"
-import "AudioApp"
-import "BluetoothApp"
-import "NetworkApp"
+import "AudioPanel"
+import "BluetoothPanel"
+import "NetworkPanel"
 import "KeybindsApp"
 import "LauncherApp"
 import "OcrApp"
+import "QuickSettingsPanel"
 import "SettingsApp"
-import "NotificationApp"
-import "PerformanceApp"
+import "NotificationPanel"
+import "BatteryPanel"
 import "VisualizerApp"
 import qs.shared
 
@@ -41,7 +42,7 @@ ShellRoot {
             "network": networkPanel,
             "bluetooth": bluetoothPanel,
             "battery": batteryPanel,
-            "settings": settingsPanel,
+            "quick-settings": quickSettingsPanel,
             "dashboard": dashboardPanel,
             "power": powerPanel
         })
@@ -52,6 +53,7 @@ ShellRoot {
     KeybindsWindow {}
     LauncherWindow {}
     OcrWindow {}
+    SettingsWindow {}
     NotificationPopups {}
     // The visualizer overlay; exists only while visualizer mode is on.
     VisualizerWindow {}
@@ -64,7 +66,7 @@ ShellRoot {
     Component { id: networkPanel; NetworkPanel {} }
     Component { id: bluetoothPanel; BluetoothPanel {} }
     Component { id: batteryPanel; BatteryPanel {} }
-    Component { id: settingsPanel; SettingsPanel {} }
+    Component { id: quickSettingsPanel; QuickSettingsPanel {} }
     Component { id: dashboardPanel; DashboardPanel {} }
     Component { id: powerPanel; PowerPanel {} }
 }

@@ -8,7 +8,7 @@ import QtQuick.Effects
 import qs.shared
 import qs.shared.ui
 import qs.StatusbarApp
-import qs.NotificationApp
+import qs.NotificationPanel
 import qs.VisualizerApp
 
 PanelWindow {
@@ -43,7 +43,7 @@ PanelWindow {
     // collapse the bar out from under itself.
     // It also holds the keyboard for a pinned popout panel, so its text fields
     // work and an outside click closes it.
-    // See the matching comment in SettingsApp/SettingsWindow.qml.
+    // See the matching comment in QuickSettingsPanel/QuickSettingsPanel.qml.
     // A popout panel on this bar that was pinned (press inside, IPC, Return).
     readonly property bool panelPinned: host.open && PopoutState.pinned
 

@@ -3,7 +3,7 @@ import Quickshell.Io
 import QtQuick
 import qs.shared
 
-// Network status icon: hovering it grows the bar into the NetworkApp panel.
+// Network status icon: hovering it grows the bar into the NetworkPanel panel.
 // Shows the connection that carries the default route:
 //   • wired:    lan-filled with internet, lan without
 //   • wireless: wifi / wifi-medium / wifi-low by signal strength,

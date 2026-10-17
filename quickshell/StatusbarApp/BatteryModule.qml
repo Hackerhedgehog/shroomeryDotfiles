@@ -8,11 +8,11 @@ import qs.shared.ui
 
 // Battery charge and power profile in one module: profile icon (leaf / gauge /
 // rocket) plus a charge-level battery icon, then the percentage. Hovering it
-// grows the bar into the battery panel (PerformanceApp/BatteryPanel), where the profile is
+// grows the bar into the battery panel (BatteryPanel/BatteryPanel), where the profile is
 // picked.
 //
 // Shown only on machines that actually have a laptop battery, so on a desktop
-// it never appears — power-profile switching lives in the SettingsApp there.
+// it never appears — power-profile switching lives in the QuickSettingsPanel there.
 // Battery data comes from the UPower display device; the profile comes from
 // power-profiles-daemon through Quickshell's PowerProfiles.
 Rectangle {

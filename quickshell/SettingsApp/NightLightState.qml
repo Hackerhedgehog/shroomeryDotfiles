@@ -26,7 +26,8 @@ Singleton {
     property string sunrise: ""
     property string sunset: ""
 
-    readonly property bool panelOpen: SettingsState.panelOpen
+    // Set by SettingsWindow: true while the window is open. Gates polling.
+    property bool panelOpen: false
 
     function apply(raw: string): void {
         let parsed = {};

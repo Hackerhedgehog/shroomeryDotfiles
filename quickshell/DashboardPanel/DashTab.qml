@@ -4,7 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 import qs.shared
 import qs.shared.ui
-import qs.DashboardApp
+import qs.DashboardPanel
 
 // The overview tab: a 3 × 2 grid of equal columns. Top row: output / input
 // volume bubbles, the clock, CPU/RAM/disk rings. Bottom row: the weather,

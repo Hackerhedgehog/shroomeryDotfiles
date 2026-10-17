@@ -106,7 +106,7 @@ Singleton {
     // Optional avatar (AccountsService-style ~/.face).
     readonly property string faceImage: home + "/.face"
 
-    // --- system (read by DashboardApp/SystemStats) ---
+    // --- system (read by DashboardPanel/SystemStats) ---
     readonly property string procDir: "/proc"
     readonly property string hwmonDir: "/sys/class/hwmon"
     // power/runtime_status of the NVIDIA card(s) bound to this driver.

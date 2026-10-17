@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Shapes
 import qs.shared
 import qs.shared.ui
-import qs.DashboardApp
+import qs.DashboardPanel
 import "Stats.js" as Stats
 
 // CPU (load sparkline + temperature), memory and swap, GPU (NVIDIA, only

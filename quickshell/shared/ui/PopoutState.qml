@@ -186,7 +186,7 @@ Singleton {
     PanelIpc { target: "network" }
     PanelIpc { target: "bluetooth" }
     PanelIpc { target: "battery" }
-    PanelIpc { target: "settings" }
+    PanelIpc { target: "quick-settings" }
     PanelIpc { target: "dashboard" }
     PanelIpc { target: "power" }
 }

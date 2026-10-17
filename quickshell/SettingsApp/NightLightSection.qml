@@ -4,7 +4,7 @@ import qs.shared
 import qs.shared.ui
 import qs.SettingsApp
 
-// Night light in the settings panel: on/off now, schedule (off, fixed times,
+// Night light in the SettingsApp: on/off now, schedule (off, fixed times,
 // sunset to sunrise), temperature and brightness. State: NightLightState.
 ColumnLayout {
     id: root

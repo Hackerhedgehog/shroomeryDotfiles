@@ -5,17 +5,17 @@ import Quickshell
 import Quickshell.Io
 import qs.shared
 import qs.shared.ui
-// Shared state for the SettingsApp panel: the shell-outs that no existing
+// Shared state for the QuickSettingsPanel: the shell-outs that no existing
 // Quickshell service covers (GTK dark/light, matugen accents, brightness).
 // Wi-Fi, Bluetooth, audio and do-not-disturb are read from the NetworkState /
 // BluetoothState / Pipewire / NotificationState singletons instead.
 QtObject {
     id: root
 
-    // True while the SettingsApp panel is open in the status bar. Gates the
+    // True while the QuickSettingsPanel is open in the status bar. Gates the
     // polling timers so nothing is polled while the panel is closed. Derived
     // from PopoutState: one flag for all monitors' panel instances.
-    readonly property bool panelOpen: PopoutState.currentName === "settings"
+    readonly property bool panelOpen: PopoutState.currentName === "quick-settings"
 
     // --- BRIGHTNESS (brightnessctl) ---
     // Never allow a fully dark screen; 10% is the slider floor.
@@ -112,82 +112,5 @@ QtObject {
         interval: 1500
         repeat: false
         onTriggered: root.refreshDarkMode()
-    }
-
-    // --- ACCENT ---
-    // apply-theme.sh records each choice in shroomery/settings/ once matugen
-    // accepted it; the files are watched, so the picker shows what is live.
-    readonly property var accentSchemes: [
-        { value: "scheme-tonal-spot", label: "Tonal spot" },
-        { value: "scheme-vibrant", label: "Vibrant" },
-        { value: "scheme-expressive", label: "Expressive" },
-        { value: "scheme-content", label: "Content" },
-        { value: "scheme-fidelity", label: "Fidelity" },
-        { value: "scheme-fruit-salad", label: "Fruit salad" },
-        { value: "scheme-rainbow", label: "Rainbow" },
-        { value: "scheme-neutral", label: "Neutral" },
-        { value: "scheme-monochrome", label: "Monochrome" }
-    ]
-    // "wallpaper" or a #rrggbb color.
-    readonly property string accentSource: {
-        const v = accentFile.text().trim().toLowerCase()
-        return /^#[0-9a-f]{6}$/.test(v) ? v : "wallpaper"
-    }
-    readonly property int accentIndex: {
-        const v = parseInt(accentIndexFile.text().trim())
-        return isNaN(v) ? 0 : v
-    }
-    readonly property int accentSchemeIndex: {
-        const v = accentSchemeFile.text().trim()
-        return Math.max(0, root.accentSchemes.findIndex(s => s.value === v))
-    }
-    // The current wallpaper's candidate colors, most dominant first.
-    readonly property var wallpaperColors: wallpaperColorsFile.text().split("\n")
-        .map(s => s.trim()).filter(s => /^#[0-9A-Fa-f]{6}$/.test(s))
-
-    property FileView accentFile: FileView {
-        path: Paths.accentSetting
-        watchChanges: true
-        printErrors: false
-        onFileChanged: reload()
-    }
-    property FileView accentIndexFile: FileView {
-        path: Paths.accentIndexSetting
-        watchChanges: true
-        printErrors: false
-        onFileChanged: reload()
-    }
-    property FileView accentSchemeFile: FileView {
-        path: Paths.accentSchemeSetting
-        watchChanges: true
-        printErrors: false
-        onFileChanged: reload()
-    }
-    // Replaced by rename, and missing until the first wallpaper.sh run, so it
-    // is also re-read whenever the panel opens.
-    property FileView wallpaperColorsFile: FileView {
-        path: Paths.wallpaperColors
-        watchChanges: true
-        printErrors: false
-        onFileChanged: reload()
-    }
-
-    onPanelOpenChanged: if (panelOpen) {
-        accentFile.reload()
-        accentIndexFile.reload()
-        accentSchemeFile.reload()
-        wallpaperColorsFile.reload()
-    }
-
-    function applyAccent(hex: string): void {
-        Quickshell.execDetached([Paths.applyTheme, "--color", hex])
-    }
-
-    function applyWallpaperAccent(index: int): void {
-        Quickshell.execDetached([Paths.applyTheme, "--wallpaper", String(index)])
-    }
-
-    function applyAccentScheme(scheme: string): void {
-        Quickshell.execDetached([Paths.applyTheme, "--scheme", scheme])
     }
 }

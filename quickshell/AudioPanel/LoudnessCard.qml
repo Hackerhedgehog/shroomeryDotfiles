@@ -1,11 +1,11 @@
-// AudioApp/LoudnessCard.qml
+// AudioPanel/LoudnessCard.qml
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell.Io
 import qs.shared
 import qs.shared.ui
-import qs.AudioApp
+import qs.AudioPanel
 import "Loudness.js" as Loudness
 
 // Collapsible dynamic-loudness card for the Output tab. Presentation only:

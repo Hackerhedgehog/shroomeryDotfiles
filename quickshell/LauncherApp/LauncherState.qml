@@ -8,7 +8,7 @@ import qs.shared
 // The launcher's view settings: whether the apps and emoji tabs show a grid or
 // a list. Kept in shroomery/settings/launcher-view.json
 // (Paths.launcherViewSettings), e.g. { "appsGrid": false, "emojiGrid": true };
-// a missing key or file means the default. Toggled from the SettingsApp panel.
+// a missing key or file means the default. Toggled from the SettingsApp.
 Singleton {
     id: root
 

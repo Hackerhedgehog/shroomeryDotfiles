@@ -5,7 +5,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Pipewire
-import qs.AudioApp
+import qs.AudioPanel
 import "Loudness.js" as Loudness
 
 // Owns the dynamic loudness filter chain: the child `pipewire -c <conf>`

@@ -9,7 +9,7 @@ import QtQuick.Controls
 import QtQuick.Effects
 import qs.shared
 import qs.shared.ui
-import qs.AudioApp
+import qs.AudioPanel
 
 PopoutPanel {
     id: root

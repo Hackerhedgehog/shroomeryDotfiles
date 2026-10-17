@@ -6,7 +6,7 @@ import QtQuick.Layouts
 import qs.shared
 import qs.shared.ui
 // Shows the default output sink's volume next to a speaker icon.
-//   • hover                 → the bar grows into the AudioApp panel;
+//   • hover                 → the bar grows into the AudioPanel panel;
 //                              Return opens it pinned
 //   • right click           → mute (volume 0); right click again restores it
 //   • mouse wheel (hovered)  → raise/lower the volume in 1% steps

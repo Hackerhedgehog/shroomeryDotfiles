@@ -4,7 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 import qs.shared
 import qs.shared.ui
-import qs.NotificationApp
+import qs.NotificationPanel
 
 // One notification: icon, app name and age, summary, body and action
 // buttons. Used by the panel's list and by the popups. A click on the body

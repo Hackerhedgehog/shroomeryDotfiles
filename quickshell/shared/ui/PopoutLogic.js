@@ -2,7 +2,7 @@
 // The rules behind the status bar popouts (PopoutState.qml): which panel is
 // open, on which monitor, from which bar button, and whether it is pinned.
 // Deliberately free of QML imports and of `.pragma library` so the same file
-// loads in QML and in Node for the unit tests (like AudioApp/Loudness.js).
+// loads in QML and in Node for the unit tests (like AudioPanel/Loudness.js).
 //
 // state: { name, screen, anchor, pinned, pending }
 //   name     open panel, "" when closed; screen: the monitor showing it

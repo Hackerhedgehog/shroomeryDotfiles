@@ -7,7 +7,7 @@ import QtQuick.Layouts
 
 // The power-profile switch popup: power-saver / balanced / performance.
 // Read and written through `powerprofilesctl` (power-profiles-daemon). Anchored
-// under whatever item opened it (the SettingsApp squircle). The status bar's
+// under whatever item opened it (the QuickSettingsPanel squircle). The status bar's
 // battery panel uses Quickshell's PowerProfiles instead.
 Item {
     id: menuRoot

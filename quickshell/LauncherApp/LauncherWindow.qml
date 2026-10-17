@@ -22,7 +22,7 @@ import "Emoji.js" as Emoji
 // and Return or a click on it copies the answer.
 //
 // The apps and emoji tabs show a list or a grid (LauncherState, toggled in the
-// SettingsApp panel).
+// SettingsApp).
 //
 // Keys: Up/Down/PageUp/PageDown move, Return runs the selection, Ctrl+Return
 // runs the typed text (run mode), Alt+Return (or a right click) runs an app or

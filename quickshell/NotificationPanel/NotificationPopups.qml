@@ -5,7 +5,7 @@ import QtQuick
 import QtQuick.Effects
 import qs.shared
 import qs.shared.ui
-import qs.NotificationApp
+import qs.NotificationPanel
 
 // New-notification popups, stacked below the bell of the focused monitor's
 // status bar (top-right corner when that bar has no bell). Each one hides

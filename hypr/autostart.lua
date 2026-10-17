@@ -29,7 +29,7 @@ hl.on("hyprland.start", function()
 	-- Load GTK settings
 	hl.exec_cmd("~/.config/hypr/scripts/gtk.sh")
 
-	-- swaync is replaced by Quickshell's NotificationApp (the notification
+	-- swaync is replaced by Quickshell's NotificationPanel (the notification
 	-- daemon now lives in the qs shell). Its systemd user unit is masked
 	-- (`systemctl --user mask swaync.service`) so D-Bus can't start it when a
 	-- notification arrives before qs is up. To go back to swaync:

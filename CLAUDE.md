@@ -48,6 +48,11 @@ every script/setting.
 Paths in this section and below are relative to `quickshell/` unless they start with `~`.
 Design specs and plans live in `quickshell/docs/superpowers/`.
 
+- `<Name>Panel/` holds a popout the status bar grows into (registered in `shell.qml` `StatusbarBars.panels`);
+  `<Name>App/` holds an app window (`CenterPanel`/`SlidePanel`) or something that isn't a popout (statusbar, dock,
+  visualizer). Panels: Audio, Bluetooth, Network, Notification, Battery, Power, Dashboard, QuickSettings.
+  `QuickSettingsPanel` (the gear, IPC `quick-settings`) has the quick actions and an "All settings" button that
+  opens `SettingsApp` (IPC `settings`; tabs Appearance, Bar & Dock, Launcher, Night light, System).
 - `shell.qml` — main shell root; instantiates every app window.
 - `<Name>App/` — one directory per app, each with a `toggle.sh`.
 - `shared/` — code used by more than one app (`import qs.shared`):
@@ -66,8 +71,8 @@ Design specs and plans live in `quickshell/docs/superpowers/`.
     `PanelIpc { target: "<name>" }` in `PopoutState`. A bar button opens it with `BarButton { popout: "<name>" }`
     (a click opens it pinned and a second click closes it; while one is pinned, hovering another button
     moves it there; Return opens it pinned). Only the taskbar's `windows` list also opens on hover (after 150 ms). Used by notifications, audio,
-    network, bluetooth, settings, battery (`PerformanceApp/BatteryPanel`: charge, power profile, hypridle timeouts, lid action), the taskbar's window list (`windows`, `StatusbarApp/TaskbarWindowsPanel`)
-    the dashboard (the clock) and the power menu (`PowerApp/PowerPanel`).
+    network, bluetooth, settings, battery (`BatteryPanel/BatteryPanel`: charge, power profile, hypridle timeouts, lid action), the taskbar's window list (`windows`, `StatusbarApp/TaskbarWindowsPanel`)
+    the dashboard (the clock) and the power menu (`PowerPanel/PowerPanel`).
   - `PopoutState` (singleton) — which panel is open, on which monitor, from which button, pinned or not
     (rules + tests: `PopoutLogic.js`). One panel at a time; it closes 300 ms after the pointer leaves pill and
     panel unless a press inside pinned it. Each bar's `StatusbarApp/PopoutHost` draws it and morphs between
@@ -76,7 +81,7 @@ Design specs and plans live in `quickshell/docs/superpowers/`.
     the launcher), on a `PanelSurface`. Set `cardWidth`/`cardHeight`; children go on the card, with
     `anchors.margins: 20`. Used by MonitorApp, WallpaperApp, OcrApp and KeybindsApp.
   - `PanelSurface` — shadow + gradient-border card; put a `ColumnLayout { anchors.fill: parent; anchors.margins: 18 }` in it.
-  - The look follows DashboardApp: content sits in `Card`s (rounded surface_container tiles), controls are
+  - The look follows DashboardPanel: content sits in `Card`s (rounded surface_container tiles), controls are
     pills with tonal fills rather than outlines, no divider lines. `AppHeader` (glyph badge + title +
     subtitle, extra children on the right) heads an app window; `StatusChip` (`tone`: normal/good/busy/error),
     `SearchField` (pill with magnifier), `FieldInput` (text field), `SettingRow` (label + hint left, control right).
@@ -86,6 +91,7 @@ Design specs and plans live in `quickshell/docs/superpowers/`.
     selection comes from state), `PanelMenu` + `MenuEntry`, `AppButton` (dock/taskbar app icon),
     `InlineMenu` (context menu drawn inside the caller's window), `WindowList` (an app's windows by title:
     click focuses, middle click closes).
+  - `AccentState.qml` (singleton) — accent palette state/actions (QuickSettingsPanel and SettingsApp); its picker is `shared/ui/AccentPicker.qml`.
   - `AppList.qml` (singleton) — desktop-entry lookup and "pinned + running apps" list for DockApp and the taskbar.
 - `VisualizerApp/` — visualizer mode (`VisualizerState` singleton, IPC `visualizer`, Super+Alt+V); colors come from the shroomery
   `screen-colors.py` daemon (`~/.config/shroomery/screencolors/README.md`). The bar, dock and notifications read
@@ -102,6 +108,7 @@ Design specs and plans live in `quickshell/docs/superpowers/`.
 
 ## Conventions
 
+- New popout: `FooPanel/FooPanel.qml` on `PopoutPanel`, a `Component` in `shell.qml` and a `StatusbarBars.panels` entry.
 - New app: `FooApp/FooWindow.qml` built on `CenterPanel` (or `SlidePanel` + `PanelSurface` for an edge panel), add `FooWindow {}` to `shell.qml`,
   add `FooApp/toggle.sh`:
   ```bash
@@ -127,6 +134,6 @@ Run the commands below from `~/.config/quickshell`.
   A file that is only loaded later (inside a `LazyLoader`, a popout panel) may not trigger the reload when saved:
   `touch shell.qml` forces one. `console.log` lines show with `qs log -r "*.debug=true"`.
 - `qs ipc show` lists targets; open/close panels with the app's `toggle.sh` to exercise them.
-- Pure JS unit tests: `node --test shared/ui/tests/ shared/tests/ VisualizerApp/tests/ StatusbarApp/tests/ DashboardApp/tests/ AudioApp/tests/ LauncherApp/tests/ KeybindsApp/tests/ PerformanceApp/tests/ SettingsApp/tests/`.
+- Pure JS unit tests: `node --test shared/ui/tests/ shared/tests/ VisualizerApp/tests/ StatusbarApp/tests/ DashboardPanel/tests/ AudioPanel/tests/ LauncherApp/tests/ KeybindsApp/tests/ BatteryPanel/tests/ SettingsApp/tests/`.
 - Shroomery bash helpers: `bash ~/.config/shroomery/tests/night-light.sh`.
 - Shell scripts: `bash -n` at least.

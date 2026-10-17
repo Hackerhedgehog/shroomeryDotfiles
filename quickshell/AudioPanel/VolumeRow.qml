@@ -4,7 +4,7 @@ import QtQuick.Controls
 import QtQuick.Effects
 import Quickshell.Services.Pipewire
 import qs.shared
-import qs.AudioApp
+import qs.AudioPanel
 
 // One volume control: icon, name, slider, percentage, mute button and a live
 // peak meter. Used for the master blocks and for every mixer stream.

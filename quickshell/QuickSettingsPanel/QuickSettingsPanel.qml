@@ -7,18 +7,14 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Effects
-import qs.VisualizerApp
 import qs.shared
 import qs.shared.ui
-import qs.SettingsApp
-import qs.StatusbarApp
-import qs.LauncherApp
+import qs.QuickSettingsPanel
 
-// Quick-settings panel: theme controls, night light, sliders, the accent
-// palette, media players and the statusbar/taskbar/launcher grid/gamemode/
-// fastfetch switches.
-// The panel the status bar grows into from the gear button (hover), like
-// AudioApp / BluetoothApp / NetworkApp.
+// Quick settings: theme controls, night light, sliders, the accent palette,
+// media players and the desktop switches. The panel the status bar grows
+// into from the gear button (hover), like AudioPanel / BluetoothPanel /
+// NetworkPanel.
 PopoutPanel {
     id: root
 
@@ -154,18 +150,6 @@ PopoutPanel {
                 width: scrollView.availableWidth
                 spacing: 20
 
-                // --- NIGHT LIGHT ---
-                NightLightSection {
-                    Layout.fillWidth: true
-                }
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    implicitHeight: 1
-                    color: Theme.primary
-                    opacity: 0.3
-                }
-
                 // --- SLIDERS ---
                 // Output and input volume come straight from the Pipewire service,
                 // so external changes (wpctl, media keys) show up live without
@@ -251,111 +235,6 @@ PopoutPanel {
                     opacity: 0.3
                 }
 
-                // --- DESKTOP ---
-                // Switches bind straight to the owning singletons, which
-                // persist into shroomery/settings/*.json. After a click the
-                // binding is re-asserted so external changes (keybinds,
-                // IPC) keep showing up live.
-                SettingRow {
-                    label: "Status Bar"
-                    ToggleSwitch {
-                        checked: StatusbarState.settings.bar.enabled
-                        onToggled: {
-                            StatusbarState.setEnabled(checked)
-                            checked = Qt.binding(() => StatusbarState.settings.bar.enabled)
-                        }
-                    }
-                    ActionIcon {
-                        iconSrc: Paths.icon("settings")
-                        onClicked: statusbarMenu.open()
-                        PanelMenu {
-                            id: statusbarMenu
-                            y: parent.height
-                            MenuEntry {
-                                text: "Reload Status Bar"
-                                onClicked: StatusbarState.reloadSettings()
-                            }
-                            MenuEntry {
-                                text: "Edit Settings"
-                                onClicked: {
-                                    root.closeRequested()
-                                    Quickshell.execDetached([Paths.editor, Paths.statusbarSettings])
-                                }
-                            }
-                        }
-                    }
-                }
-
-                SettingRow {
-                    label: "Statusbar Expanded"
-                    ToggleSwitch {
-                        checked: StatusbarState.settings.bar.alwaysExpanded
-                        onToggled: {
-                            StatusbarState.setAlwaysExpanded(checked)
-                            checked = Qt.binding(() => StatusbarState.settings.bar.alwaysExpanded)
-                        }
-                    }
-                    Item { implicitWidth: 28 }
-                }
-
-                SettingRow {
-                    label: "Taskbar"
-                    ToggleSwitch {
-                        checked: StatusbarState.settings.taskbar.enabled
-                        onToggled: {
-                            StatusbarState.setTaskbarEnabled(checked)
-                            checked = Qt.binding(() => StatusbarState.settings.taskbar.enabled)
-                        }
-                    }
-                    ActionIcon {
-                        iconSrc: Paths.icon("settings")
-                        onClicked: taskbarMenu.open()
-                        PanelMenu {
-                            id: taskbarMenu
-                            y: parent.height
-                            MenuEntry {
-                                text: "Reload Taskbar"
-                                onClicked: StatusbarState.reloadSettings()
-                            }
-                            // The pins live in statusbar.json under
-                            // taskbar.pinned; reload after saving.
-                            MenuEntry {
-                                text: "Edit Pinned Apps"
-                                onClicked: {
-                                    root.closeRequested()
-                                    Quickshell.execDetached([Paths.editor, Paths.statusbarSettings])
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Launcher apps/emoji tabs: grid or list (LauncherState →
-                // shroomery/settings/launcher-view.json).
-                SettingRow {
-                    label: "Grid Apps"
-                    ToggleSwitch {
-                        checked: LauncherState.appsGrid
-                        onToggled: {
-                            LauncherState.setAppsGrid(checked)
-                            checked = Qt.binding(() => LauncherState.appsGrid)
-                        }
-                    }
-                    Item { implicitWidth: 28 }
-                }
-
-                SettingRow {
-                    label: "Grid Emojis"
-                    ToggleSwitch {
-                        checked: LauncherState.emojiGrid
-                        onToggled: {
-                            LauncherState.setEmojiGrid(checked)
-                            checked = Qt.binding(() => LauncherState.emojiGrid)
-                        }
-                    }
-                    Item { implicitWidth: 28 }
-                }
-
                 // hypr/scripts/gamemode.sh flips Hyprland and the flag file.
                 SettingRow {
                     label: "Gamemode"
@@ -377,57 +256,17 @@ PopoutPanel {
                     }
                     Item { implicitWidth: 28 }
                 }
+            }
+        }
 
-                // On unless the hide-fastfetch flag file exists.
-                SettingRow {
-                    label: "Fastfetch"
-                    ToggleSwitch {
-                        id: fastfetchSwitch
-                        property bool ready: false
-                        Process {
-                            command: ["test", "-f", Paths.hideFastfetch]
-                            running: root.active
-                            onExited: exitCode => {
-                                fastfetchSwitch.checked = exitCode !== 0
-                                fastfetchSwitch.ready = true
-                            }
-                        }
-                        onToggled: {
-                            if (!ready)
-                                return
-                            Quickshell.execDetached(checked
-                                ? ["rm", "-f", Paths.hideFastfetch]
-                                : ["touch", Paths.hideFastfetch])
-                        }
-                    }
-                    Item { implicitWidth: 28 }
-                }
-
-                SettingRow {
-                    label: "Visualizer mode"
-                    ToggleSwitch {
-                        checked: VisualizerState.active
-                        onToggled: {
-                            if (checked)
-                                VisualizerState.openSetup()
-                            else
-                                VisualizerState.disable()
-                            checked = Qt.binding(() => VisualizerState.active)
-                        }
-                    }
-                    Item { implicitWidth: 28 }
-                }
-
-                SettingRow {
-                    label: "Wallpaper"
-                    ActionIcon {
-                        iconSrc: Paths.icon("wallpaper")
-                        onClicked: {
-                            root.closeRequested()
-                            Quickshell.execDetached(["qs", "ipc", "call", "wallpaper", "open"])
-                        }
-                    }
-                }
+        PanelButton {
+            Layout.fillWidth: true
+            tonal: true
+            glyph: String.fromCodePoint(0xF0493)
+            text: "All settings"
+            onClicked: {
+                root.closeRequested()
+                Quickshell.execDetached(["qs", "ipc", "call", "settings", "open"])
             }
         }
     }

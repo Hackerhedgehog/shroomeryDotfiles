@@ -1,7 +1,7 @@
 import Quickshell
 import QtQuick
 import qs.shared
-import qs.NotificationApp
+import qs.NotificationPanel
 
 // Bell: hovering it grows the bar into the notification panel. Also where
 // the popups appear. Filled while there are notifications in the list,

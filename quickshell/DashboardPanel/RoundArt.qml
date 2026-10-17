@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Effects
 import QtQuick.Shapes
 import qs.shared
-import qs.DashboardApp
+import qs.DashboardPanel
 import "../shared/Visualizer.js" as Viz
 
 // Cover art cut to a circle with a thin ring around it, and a music note

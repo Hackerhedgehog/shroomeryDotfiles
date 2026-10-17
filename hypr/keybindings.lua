@@ -9,10 +9,10 @@ hl.bind(mainMod .. " + PERIOD", hl.dsp.exec_cmd("~/.config/quickshell/LauncherAp
 
 -- Quick Shell Controls Panels
 hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("~/.config/quickshell/MonitorApp/toggle.sh"), { description = "Open the MonitorApp" })
-hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("~/.config/quickshell/BluetoothApp/toggle.sh"), { description = "Open the BluetoothApp" })
-hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("~/.config/quickshell/NetworkApp/toggle.sh"), { description = "Open the NetworkApp" })
+hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("~/.config/quickshell/BluetoothPanel/toggle.sh"), { description = "Open the BluetoothPanel" })
+hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("~/.config/quickshell/NetworkPanel/toggle.sh"), { description = "Open the NetworkPanel" })
 hl.bind(mainMod .. " + K", hl.dsp.exec_cmd("~/.config/quickshell/KeybindsApp/toggle.sh"), { description = "Open the KeybindsApp" })
-hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("~/.config/quickshell/AudioApp/toggle.sh"), { description = "Open the AudioApp" })
+hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("~/.config/quickshell/AudioPanel/toggle.sh"), { description = "Open the AudioPanel" })
 hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("~/.config/quickshell/WallpaperApp/toggle.sh"), { description = "Open the WallpaperApp" })
 hl.bind(mainMod .. " + U", hl.dsp.exec_cmd("~/.config/shroomery/scripts/install-updates.sh"), { description = "Open the UpdateApp" })
 
@@ -96,7 +96,7 @@ hl.bind(mainMod .. " + PRINT", hl.dsp.exec_cmd("~/.config/hypr/scripts/screensho
 --hl.bind(mainMod .. " + ALT + F", hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot.sh --instant"), { description = "Take an instant full-screen screenshot" })
 --hl.bind(mainMod .. " + ALT + S", hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot.sh --instant-area"), { description = "Take an instant area screenshot" })
 hl.bind(mainMod .. " + ALT + A", hl.dsp.exec_cmd("~/.config/quickshell/OcrApp/toggle.sh capture"), { description = "Extract text from an area" })
-hl.bind(mainMod .. " + CTRL + P", hl.dsp.exec_cmd("~/.config/quickshell/PowerApp/toggle.sh"), { description = "Start Power Menu" })
+hl.bind(mainMod .. " + CTRL + P", hl.dsp.exec_cmd("~/.config/quickshell/PowerPanel/toggle.sh"), { description = "Start Power Menu" })
 --hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("~/.config/shroomery/scripts/wallpaper.sh --random"), { description = "Change the wallpaper" })
 --hl.bind(mainMod .. " + CTRL + W", hl.dsp.exec_cmd("~/.config/quickshell/WallpaperApp/toggle.sh"), { description = "Open wallpaper selector" })
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd("~/.config/hypr/scripts/launcher.sh"), { description = "Open application launcher" })
@@ -107,8 +107,8 @@ hl.bind(mainMod .. " + ALT + D", hl.dsp.exec_cmd("qs ipc call dock reload"), { d
 hl.bind(mainMod .. " + CTRL + D", hl.dsp.exec_cmd("~/.config/quickshell/DockApp/toggle.sh"), { description = "Toggle Dock" })
 hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("~/.config/hypr/scripts/loadconfig.sh"), { description = "Reload hyprland config" })
 hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd("~/.config/shroomery/scripts/toggle-theme.sh"), { description = "Toggle between light and dark mode" })
-hl.bind(mainMod .. " + CTRL + S", hl.dsp.exec_cmd("~/.config/quickshell/SettingsApp/toggle.sh"), { description = "Open the SettingsApp" })
-hl.bind(mainMod .. " + CTRL + C", hl.dsp.exec_cmd("~/.config/quickshell/DashboardApp/toggle.sh"), { description = "Open the dashboard" })
+hl.bind(mainMod .. " + CTRL + S", hl.dsp.exec_cmd("~/.config/quickshell/QuickSettingsPanel/toggle.sh"), { description = "Open the quick settings" })
+hl.bind(mainMod .. " + CTRL + C", hl.dsp.exec_cmd("~/.config/quickshell/DashboardPanel/toggle.sh"), { description = "Open the dashboard" })
 hl.bind(mainMod .. " + SPACE", hl.dsp.exec_cmd("qs ipc call statusbar focus"), { description = "Expand statusbar and focus it for keyboard navigation" })
 hl.bind(mainMod .. " + ALT + G", hl.dsp.exec_cmd("~/.config/hypr/scripts/gamemode.sh"), { description = "Toggle game mode" })
 hl.bind(mainMod .. " + ALT + V", hl.dsp.exec_cmd("~/.config/quickshell/VisualizerApp/toggle.sh"), { description = "Visualizer: open setup / stop" })

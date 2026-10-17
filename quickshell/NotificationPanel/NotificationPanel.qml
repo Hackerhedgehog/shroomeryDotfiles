@@ -4,7 +4,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import qs.shared
 import qs.shared.ui
-import qs.NotificationApp
+import qs.NotificationPanel
 
 // Notification history: the panel the status bar grows into from the bell
 // (hover), or over IPC (toggle.sh, keybinding).

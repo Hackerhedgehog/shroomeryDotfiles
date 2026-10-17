@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import qs.shared
 import qs.shared.ui
-import qs.DashboardApp
+import qs.DashboardPanel
 
 // The dashboard the status bar grows into when the clock is hovered: a tab
 // row over the current tab, which slides in from the side it comes from;

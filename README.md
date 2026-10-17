@@ -56,7 +56,7 @@ and its theme.
 
 **Keybinds → UI.** `hypr/keybindings.lua` binds keys either to Hyprland
 dispatchers, to `hypr/scripts/*.sh` helpers, or to a
-`quickshell/<Name>App/toggle.sh`. Those talk to the running `qs` over IPC to
+`quickshell/<Name>App/toggle.sh` (or `<Name>Panel/`). Those talk to the running `qs` over IPC to
 show or hide a panel. The KeybindsApp edits `keybindings.lua` back, so the
 file is both config and data.
 
@@ -90,7 +90,7 @@ light schedule.
 |------------|-------|
 | change a keybind or window rule | `hypr/keybindings.lua`, `hypr/windowrules.lua` (or the KeybindsApp) |
 | change monitors, idle/lock behavior | `hypr/monitors.lua`, `hypr/hypridle.conf`, `hypr/hyprlock.conf` |
-| add or change a panel/app | `quickshell/<Name>App/`, shared widgets in `quickshell/shared/ui/` |
+| add or change a panel/app | `quickshell/<Name>Panel/` (bar popout) or `quickshell/<Name>App/` (window), shared widgets in `quickshell/shared/ui/` |
 | add a new external path or command a UI uses | `quickshell/shared/Paths.qml`, then update `quickshell/README.md` |
 | change wallpaper/theme behavior | `shroomery/scripts/wallpaper.sh`, `apply-theme.sh`, `shroomery/effects/` |
 | add a background watcher | `shroomery/listeners/` + `listeners.sh` |

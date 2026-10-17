@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import qs.shared
 import qs.shared.ui
-import qs.DashboardApp
+import qs.DashboardPanel
 import "WeatherData.js" as W
 
 // Current conditions, today's hours and a three-day forecast (Weather).

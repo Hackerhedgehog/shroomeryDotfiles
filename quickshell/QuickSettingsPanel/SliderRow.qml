@@ -75,7 +75,7 @@ RowLayout {
         // outside changes (wpctl, brightnessctl, media keys) again. Instead
         // we seed it once and re-push it on every external change, but only
         // while the handle isn't pressed, mirroring the same pattern used
-        // for the AudioApp mixer sliders (see AudioApp/VolumeRow.qml).
+        // for the AudioPanel mixer sliders (see AudioPanel/VolumeRow.qml).
         Component.onCompleted: value = row.value
         onMoved: row.moved(row.clamp(value))
 
