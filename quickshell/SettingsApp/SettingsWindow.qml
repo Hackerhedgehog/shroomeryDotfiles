@@ -17,17 +17,46 @@ import qs.VisualizerApp
 CenterPanel {
     id: root
     ipcTarget: "settings"
+    ipcEnabled: false
     cardWidth: 760
     cardHeight: 620
 
-    readonly property var tabs: ["Appearance", "Bar & Dock", "Launcher", "Night light", "System"]
+    readonly property var tabs: ["Appearance", "Bar & Dock", "Launcher", "Night light", "Update", "System"]
     property int tab: 0
 
     onIsOpenChanged: if (isOpen) tab = 0
 
+    // `qs ipc call settings openTab <name>`: opens the window (when closed) on
+    // the tab with that label, case-insensitive. An unknown name keeps the tab.
+    function openTab(name: string): void {
+        const wanted = name.trim().toLowerCase();
+        const index = tabs.findIndex(label => label.toLowerCase() === wanted);
+        if (!isOpen)
+            open();
+        if (index >= 0)
+            tab = index;
+    }
+
     // Night light polls hyprsunset only while this window is open.
     Binding {
         target: NightLightState
+        property: "panelOpen"
+        value: root.isOpen
+    }
+
+    // The one handler of the target (SlidePanel's is off): the usual four plus openTab.
+    IpcHandler {
+        target: root.ipcTarget
+        function toggle(): void { root.toggle(); }
+        function open(): void { root.open(); }
+        function close(): void { root.close(); }
+        function isOpen(): bool { return root.isOpen; }
+        function openTab(name: string): void { root.openTab(name); }
+    }
+
+    // The Update tab polls the package state only while this window is open.
+    Binding {
+        target: UpdateState
         property: "panelOpen"
         value: root.isOpen
     }
@@ -40,7 +69,7 @@ CenterPanel {
         AppHeader {
             glyph: String.fromCodePoint(0xF0493)
             title: "Settings"
-            subtitle: "Appearance, bar, launcher, night light and system"
+            subtitle: "Appearance, bar, launcher, night light, updates and system"
         }
 
         TabPills {
@@ -202,10 +231,16 @@ CenterPanel {
                     visible: root.tab === 3
                 }
 
+                // --- UPDATE ---
+                UpdateSection {
+                    Layout.fillWidth: true
+                    visible: root.tab === 4
+                }
+
                 // --- SYSTEM ---
                 ColumnLayout {
                     Layout.fillWidth: true
-                    visible: root.tab === 4
+                    visible: root.tab === 5
                     spacing: 14
 
                     // hypr/scripts/gamemode.sh flips Hyprland and the flag file.

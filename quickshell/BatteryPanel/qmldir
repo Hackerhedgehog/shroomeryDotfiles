@@ -1,2 +1,3 @@
 BatteryPanel 1.0 BatteryPanel.qml
 singleton IdleState 1.0 IdleState.qml
+singleton ConservationState 1.0 ConservationState.qml

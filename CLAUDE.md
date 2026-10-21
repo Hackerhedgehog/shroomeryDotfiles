@@ -30,7 +30,7 @@ shroomery layout:
 - `lib.sh` — shared paths/helpers every script sources (mirror of `quickshell/shared/Paths.qml`)
 - `notify.sh` — `notify_user` helper sourced by hypr scripts
 - `scripts/` — `wallpaper.sh`, `animated-wallpaper.sh` (mpvpaper: videos/GIFs, paused on battery/gamemode), `wallpaper-thumbnails.sh`, `apply-theme.sh`, `toggle-theme.sh`, `power.sh`,
-  `check-updates.sh`, `install-updates.sh`, `system-update.sh`, `autostart.sh`,
+  `check-updates.sh`, `install-updates.sh` (opens Settings → Update), `autostart.sh`,
   `terminal.sh`, `editor.sh`, `clear-wallpaper-cache.sh`, `ocr.sh`, `lid-switch.sh`, `screen-colors.py`
 - `screencolors/` — the screen color sampler package (`screen-colors.py`), with its own README (protocol, LED notes)
 - `effects/` — wallpaper effects (ImageMagick snippets) applied by `wallpaper.sh`
@@ -52,7 +52,7 @@ Design specs and plans live in `quickshell/docs/superpowers/`.
   `<Name>App/` holds an app window (`CenterPanel`/`SlidePanel`) or something that isn't a popout (statusbar, dock,
   visualizer). Panels: Audio, Bluetooth, Network, Notification, Battery, Power, Dashboard, QuickSettings.
   `QuickSettingsPanel` (the gear, IPC `quick-settings`) has the quick actions and an "All settings" button that
-  opens `SettingsApp` (IPC `settings`; tabs Appearance, Bar & Dock, Launcher, Night light, System).
+  opens `SettingsApp` (IPC `settings`; tabs Appearance, Bar & Dock, Launcher, Night light, Update, System; `openTab <name>` opens a tab).
 - `shell.qml` — main shell root; instantiates every app window.
 - `<Name>App/` — one directory per app, each with a `toggle.sh`.
 - `shared/` — code used by more than one app (`import qs.shared`):
@@ -63,7 +63,8 @@ Design specs and plans live in `quickshell/docs/superpowers/`.
 - `shared/ui/` — the UI kit (`import qs.shared.ui`). All apps must use it so they look and behave the same:
   - `SlidePanel` — window frame: slides from `edge` left/right/top on the focused monitor, outside-click
     and Escape close, IPC `toggle/open/close/isOpen` on `ipcTarget`. Options: `panelWidth`, `fullHeight`,
-    `topMargin`, `bottomMargin`, `escapeHandler` (return true when it consumed Escape), `focusGrabEnabled`.
+    `topMargin`, `bottomMargin`, `escapeHandler` (return true when it consumed Escape), `focusGrabEnabled`,
+    `ipcEnabled` (false when the app declares its own `IpcHandler` for `ipcTarget`: a target takes one handler only, SettingsWindow does this for `openTab`).
   - `PopoutPanel` — root of a panel the status bar grows into (not a window): lay content out at
     `implicitWidth` (use `standardWidth`, shared by all bar-button panels) × `implicitHeight` (cap with `maxHeight`); `active` replaces "is open", `closeRequested()`
     closes, `escapeHandler` returns true when it used Escape, `holdOpen` while a child popup holds a focus grab.
@@ -135,5 +136,9 @@ Run the commands below from `~/.config/quickshell`.
   `touch shell.qml` forces one. `console.log` lines show with `qs log -r "*.debug=true"`.
 - `qs ipc show` lists targets; open/close panels with the app's `toggle.sh` to exercise them.
 - Pure JS unit tests: `node --test shared/ui/tests/ shared/tests/ VisualizerApp/tests/ StatusbarApp/tests/ DashboardPanel/tests/ AudioPanel/tests/ LauncherApp/tests/ KeybindsApp/tests/ BatteryPanel/tests/ SettingsApp/tests/`.
-- Shroomery bash helpers: `bash ~/.config/shroomery/tests/night-light.sh`.
+- Shroomery bash helpers: `bash ~/.config/shroomery/tests/night-light.sh`, `bash ~/.config/shroomery/tests/pkg-update.sh`, `bash ~/.config/shroomery/tests/recovery.sh`.
+  Run them capped, in the foreground: `systemd-run --user --scope -p TasksMax=1000 -q bash <test>` (a runaway
+  test once used up the terminal's process limit and crashed Claude Code). Not under `nohup` or `&`: the
+  ignored SIGHUP/SIGINT they pass on makes the signal tests fail falsely. A PATH stub calls the real binary by
+  absolute path, never `command <name>` (that finds the stub itself).
 - Shell scripts: `bash -n` at least.

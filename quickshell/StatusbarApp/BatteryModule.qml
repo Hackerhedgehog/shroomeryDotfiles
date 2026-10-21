@@ -5,6 +5,7 @@ import QtQuick.Effects
 import QtQuick.Layouts
 import qs.shared
 import qs.shared.ui
+import qs.BatteryPanel
 
 // Battery charge and power profile in one module: profile icon (leaf / gauge /
 // rocket) plus a charge-level battery icon, then the percentage. Hovering it
@@ -133,13 +134,16 @@ Rectangle {
     }
 
     // Clicking grows the bar into the battery panel; hovering moves a pinned
-    // panel here.
+    // panel here. Right click toggles the Lenovo conservation mode.
     MouseArea {
         id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onClicked: PopoutState.click(battery.screenName, "battery", battery)
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: mouse => mouse.button === Qt.RightButton
+            ? ConservationState.toggle()
+            : PopoutState.click(battery.screenName, "battery", battery)
         onContainsMouseChanged: containsMouse
             ? PopoutState.hover(battery.screenName, "battery", battery, false)
             : PopoutState.unhover(battery)

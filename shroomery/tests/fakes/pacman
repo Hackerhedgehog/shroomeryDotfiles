@@ -1,0 +1,194 @@
+#!/usr/bin/env bash
+# Fake pacman for tests/pkg-update.sh.
+#   FAKE_PACMAN_DB   file of "name version" lines: answers -Q and -Q NAME
+#   FAKE_PACMAN_ARCHS  optional file of "name arch" lines for -Qi NAME (Architecture field; default x86_64)
+#   FAKE_PACMAN_DEPS   optional file of "name dep..." lines (whitespace separated, e.g. "lib32-glibc glibc=2.44"):
+#                    the "Depends On" field of -Qi (None when a package has no line). -Qi without a name lists every
+#                    package of FAKE_PACMAN_DB, as pacman does. When set, -U also checks the transaction like pacman:
+#                    an installed package that is NOT in it and has an exact dependency (name=ver, name=ver-rel) on a
+#                    package that IS in it, at another version, makes -U fail ("could not satisfy dependencies").
+#   FAKE_PACMAN_ENVLOG  file: every invocation appends "<arguments> LC_ALL=<value seen>"
+#   FAKE_PACMAN_LOG  every other invocation (and every -Sy / -Qu) is appended here (its arguments)
+#   FAKE_PACMAN_EXIT exit status (default 0); non-zero makes -Q fail with no output too
+#   FAKE_PACMAN_UPDATES  file of pending updates, lines "name old -> new". A line ending in
+#                    " ignored" stands for an IgnorePkg'd package: -Qu prints it as
+#                    "name old -> new [ignored]" when the --config file has an IgnorePkg
+#                    or IgnoreGroup line, as a plain update when it has none (as real pacman does).
+#                    Missing file = no updates.
+#   FAKE_PACMAN_SY_EXIT  exit status of -Sy (default 0); prints "error: failed to synchronize" then
+#   FAKE_PACMAN_QU_EXIT  exit status of -Qu (default: 1 when it printed nothing, like pacman, else 0)
+#   FAKE_PACMAN_QU_ERR   text printed to stderr by -Qu
+#   -Syuw / -Syu (the update): logged as the full argument string (after the other lines, in the same
+#                    FAKE_PACMAN_LOG). Per run:
+#     FAKE_PACMAN_CONF_COPY  when set, the --config file is copied to $FAKE_PACMAN_CONF_COPY.<op> (op = Syuw|Syu)
+#     FAKE_PACMAN_WATCH      when set, that file is copied to $FAKE_PACMAN_WATCH_OUT.<op> (default: next to it) - what apply had written so far
+#     FAKE_PACMAN_SYUW_EXIT / FAKE_PACMAN_SYU_EXIT  exit status of the download / install step (default FAKE_PACMAN_EXIT, else 0)
+#     FAKE_PACMAN_AFTER      -Syu replaces FAKE_PACMAN_DB with this file (versions moved), even when it then fails
+#                    (a partly applied update); a "$FAKE_PACMAN_DB.updated" marker is created
+#     FAKE_PACMAN_Q_FAIL_AFTER_UPDATE  when 1, -Q fails once the marker exists (pacman broke after the update)
+#     FAKE_PACMAN_STARTED    file created when -Syu starts (the update is running); its pid goes to $FAKE_PACMAN_STARTED.pid
+#     FAKE_PACMAN_SLEEP      -Syu then sleeps this many seconds. FAKE_PACMAN_SYUW_STARTED / FAKE_PACMAN_SYUW_SLEEP: the same for -Syuw.
+#                    Like pacman 7: INT exits 130 and HUP 129 after removing the db.lck marker ($PKG_PACMAN_DBLOCK,
+#                    created while -Syuw/-Syu run), TERM kills it at once and leaves the marker behind.
+#   -U (install local files, used by recovery.sh): the arguments go to FAKE_PACMAN_LOG; FAKE_PACMAN_U_ERR is printed to
+#                    stderr; exit status FAKE_PACMAN_U_EXIT (default FAKE_PACMAN_EXIT, else 0; the FAKE_PACMAN_DEPS check
+#                    above can make it 1). The database is not changed.
+# Extend by adding a case branch below.
+db="${FAKE_PACMAN_DB:?FAKE_PACMAN_DB not set}"
+# A sleeping -Syuw/-Syu must be able to catch INT: a background job of a script starts with it ignored
+# (real pacman installs its handlers itself), so re-exec once with it reset.
+if [ -z "${FAKE_PACMAN_REEXEC:-}" ] && { [ -n "${FAKE_PACMAN_SLEEP:-}" ] || [ -n "${FAKE_PACMAN_SYUW_SLEEP:-}" ]; }; then
+    export FAKE_PACMAN_REEXEC=1
+    exec perl -e '$SIG{INT} = "DEFAULT"; $SIG{HUP} = "DEFAULT"; exec @ARGV' "$0" "$@"
+fi
+[ -z "${FAKE_PACMAN_ENVLOG:-}" ] || echo "$* LC_ALL=${LC_ALL-unset}" >> "$FAKE_PACMAN_ENVLOG"
+
+# Options that take a value or are global; everything else is the operation + targets.
+all="$*"
+conf="" dbpath="" rest=()
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --config)  conf=$2; shift ;;
+        --dbpath)  dbpath=$2; shift ;;
+        --logfile|--color) shift ;;
+        --disable-sandbox-filesystem|--noconfirm) ;;
+        *) rest+=("$1") ;;
+    esac
+    shift
+done
+set -- "${rest[@]}"
+
+case "${1:-}" in
+    -Q)
+        [ "${FAKE_PACMAN_EXIT:-0}" = 0 ] || exit "$FAKE_PACMAN_EXIT"
+        if [ "${FAKE_PACMAN_Q_FAIL_AFTER_UPDATE:-0}" = 1 ] && [ -e "$db.updated" ]; then
+            echo "error: failed to initialize alpm library" >&2
+            exit 1
+        fi
+        if [ -n "${2:-}" ]; then
+            line=$(awk -v n="$2" '$1 == n' "$db")
+            [ -n "$line" ] || { echo "error: package '$2' was not found" >&2; exit 1; }
+            echo "$line"
+        else
+            cat "$db"
+        fi
+        ;;
+    -Qi)
+        [ "${FAKE_PACMAN_EXIT:-0}" = 0 ] || exit "$FAKE_PACMAN_EXIT"
+        if [ "${FAKE_PACMAN_Q_FAIL_AFTER_UPDATE:-0}" = 1 ] && [ -e "$db.updated" ]; then
+            echo "error: failed to initialize alpm library" >&2
+            exit 1
+        fi
+        if [ -n "${2:-}" ]; then
+            line=$(awk -v n="$2" '$1 == n' "$db")
+            [ -n "$line" ] || { echo "error: package '$2' was not found" >&2; exit 1; }
+        fi
+        # One block per package (just NAME, or all of them), fields as pacman prints them, a blank line after each.
+        awk -v only="${2:-}" -v archs="${FAKE_PACMAN_ARCHS:-/dev/null}" -v deps="${FAKE_PACMAN_DEPS:-/dev/null}" '
+            BEGIN {
+                while ((getline l < archs) > 0) { split(l, a, " "); if (a[1] != "") arch[a[1]] = a[2] }
+                while ((getline l < deps) > 0) {
+                    n = split(l, d, /[ \t]+/); if (d[1] == "") continue
+                    v = ""; for (i = 2; i <= n; i++) if (d[i] != "") v = v (v == "" ? "" : "  ") d[i]
+                    dep[d[1]] = v
+                }
+            }
+            NF >= 2 && (only == "" || $1 == only) {
+                printf "Name            : %s\nVersion         : %s\nDescription     : fake\nArchitecture    : %s\n", $1, $2, ($1 in arch ? arch[$1] : "x86_64")
+                printf "Provides        : None\nDepends On      : %s\nOptional Deps   : None\n\n", ($1 in dep && dep[$1] != "" ? dep[$1] : "None")
+            }' "$db"
+        ;;
+    -Sy)
+        [ -n "${FAKE_PACMAN_LOG:-}" ] && echo "-Sy config=$conf dbpath=$dbpath" >> "$FAKE_PACMAN_LOG"
+        if [ "${FAKE_PACMAN_SY_EXIT:-0}" != 0 ]; then
+            echo "error: failed to synchronize all databases (unable to lock database)" >&2
+            exit "$FAKE_PACMAN_SY_EXIT"
+        fi
+        ;;
+    -Qu)
+        [ -n "${FAKE_PACMAN_LOG:-}" ] && echo "-Qu config=$conf dbpath=$dbpath" >> "$FAKE_PACMAN_LOG"
+        [ -z "${FAKE_PACMAN_QU_ERR:-}" ] || echo "$FAKE_PACMAN_QU_ERR" >&2
+        held_conf=0
+        grep -Eq '^[[:space:]]*Ignore(Pkg|Group)[[:space:]]*=' "$conf" 2>/dev/null && held_conf=1
+        out=""
+        if [ -f "${FAKE_PACMAN_UPDATES:-/nonexistent}" ]; then
+            while IFS= read -r line; do
+                [ -n "$line" ] || continue
+                case "$line" in
+                    *" ignored") line=${line% ignored}
+                        [ "$held_conf" = 1 ] && line="$line [ignored]" ;;
+                esac
+                out+="$line"$'\n'
+            done < "$FAKE_PACMAN_UPDATES"
+        fi
+        printf '%s' "$out"
+        if [ -n "${FAKE_PACMAN_QU_EXIT:-}" ]; then exit "$FAKE_PACMAN_QU_EXIT"; fi
+        [ -n "$out" ] || exit 1
+        ;;
+    -Syuw|-Syu)
+        op=${1#-}
+        [ -n "${FAKE_PACMAN_LOG:-}" ] && echo "$all" >> "$FAKE_PACMAN_LOG"
+        [ -z "${FAKE_PACMAN_CONF_COPY:-}" ] || [ -z "$conf" ] || cp "$conf" "$FAKE_PACMAN_CONF_COPY.$op"
+        [ -z "${FAKE_PACMAN_WATCH:-}" ] || cp "$FAKE_PACMAN_WATCH" "${FAKE_PACMAN_WATCH_OUT:-$FAKE_PACMAN_WATCH}.$op" 2>/dev/null
+        if [ "$op" = Syuw ]; then
+            started=${FAKE_PACMAN_SYUW_STARTED:-}; slp=${FAKE_PACMAN_SYUW_SLEEP:-}
+            code=${FAKE_PACMAN_SYUW_EXIT:-${FAKE_PACMAN_EXIT:-0}}
+        else
+            started=${FAKE_PACMAN_STARTED:-}; slp=${FAKE_PACMAN_SLEEP:-}
+            code=${FAKE_PACMAN_SYU_EXIT:-${FAKE_PACMAN_EXIT:-0}}
+        fi
+        # db.lck as the real pacman keeps it: taken now, released on exit and on INT/HUP
+        unlock() { [ -z "${PKG_PACMAN_DBLOCK:-}" ] || rm -f "$PKG_PACMAN_DBLOCK"; }
+        [ -z "${PKG_PACMAN_DBLOCK:-}" ] || : > "$PKG_PACMAN_DBLOCK"
+        [ -z "$started" ] || { echo $$ > "$started.pid"; : > "$started"; }
+        if [ "$op" = Syu ] && [ -n "${FAKE_PACMAN_AFTER:-}" ]; then
+            cp "$FAKE_PACMAN_AFTER" "$db" && : > "$db.updated"
+        fi
+        if [ -n "$slp" ]; then
+            sleep "$slp" & spid=$!
+            trap 'kill $spid 2>/dev/null; unlock; exit 130' INT       # soft stop, lock released
+            trap 'kill $spid 2>/dev/null; unlock; exit 129' HUP
+            trap 'kill $spid 2>/dev/null; exit 143' TERM              # not handled by pacman: dies, db.lck stays
+            wait $spid
+            trap - INT HUP TERM
+        fi
+        unlock
+        exit "$code"
+        ;;
+    -U)
+        [ -n "${FAKE_PACMAN_LOG:-}" ] && echo "$all" >> "$FAKE_PACMAN_LOG"
+        [ -z "${FAKE_PACMAN_U_ERR:-}" ] || echo "$FAKE_PACMAN_U_ERR" >&2
+        code=${FAKE_PACMAN_U_EXIT:-${FAKE_PACMAN_EXIT:-0}}
+        if [ "$code" = 0 ] && [ -n "${FAKE_PACMAN_DEPS:-}" ]; then
+            # The transaction: NAME VERSION of every file (NAME-PKGVER-PKGREL-ARCH.pkg.tar.zst).
+            trans=""
+            for f in "${@:2}"; do
+                b=${f##*/}; b=${b%.pkg.tar.zst}; b=${b%-*}
+                rel=${b##*-}; b=${b%-*}; ver=${b##*-}; name=${b%-*}
+                trans+="$name $ver-$rel"$'\n'
+            done
+            broken=$(awk -v trans="$trans" '
+                BEGIN { n = split(trans, t, "\n"); for (i = 1; i <= n; i++) if (t[i] != "") { split(t[i], p, " "); tv[p[1]] = p[2] } }
+                FILENAME == ARGV[1] { if (NF >= 2) inst[$1] = 1; next }
+                ($1 in inst) && !($1 in tv) {
+                    for (i = 2; i <= NF; i++) {
+                        if ($i !~ /^[^<>=]+=[^=]/) continue
+                        split($i, q, "="); tgt = q[1]; want = substr($i, length(tgt) + 2)
+                        if (!(tgt in tv)) continue
+                        have = tv[tgt]; if (want !~ /-/) sub(/-[^-]*$/, "", have)
+                        if (have != want) print ":: installing " tgt " (" tv[tgt] ") breaks dependency \047" $i "\047 required by " $1
+                    }
+                }' "$db" "$FAKE_PACMAN_DEPS")
+            if [ -n "$broken" ]; then
+                echo "error: failed to prepare transaction (could not satisfy dependencies)" >&2
+                printf '%s\n' "$broken" >&2
+                exit 1
+            fi
+        fi
+        exit "$code"
+        ;;
+    *)
+        [ -n "${FAKE_PACMAN_LOG:-}" ] && echo "$all" >> "$FAKE_PACMAN_LOG"
+        exit "${FAKE_PACMAN_EXIT:-0}"
+        ;;
+esac

@@ -19,6 +19,9 @@ PanelWindow {
 
     // IPC target name; also what the app's toggle.sh passes to shared/toggle.sh.
     required property string ipcTarget
+    // Set false when the app declares its own IpcHandler for ipcTarget (with
+    // toggle/open/close/isOpen and more): a target takes only one handler.
+    property bool ipcEnabled: true
     // "left", "right" or "top".
     property string edge: "left"
     // left/right panels: stretch from topMargin to bottomMargin. When false the
@@ -145,6 +148,7 @@ PanelWindow {
     }
 
     IpcHandler {
+        enabled: panel.ipcEnabled
         target: panel.ipcTarget
         function toggle(): void { panel.toggle(); }
         function open(): void { panel.open(); }

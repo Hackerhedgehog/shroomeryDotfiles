@@ -47,6 +47,10 @@ Singleton {
     readonly property string visualizerSettings: settings + "/visualizer.json"
     // Night light: mode (off/fixed/sun), on/off times, temperature, gamma (NightLightLogic.DEFAULTS).
     readonly property string nightLightSettings: settings + "/night-light.json"
+    // Safe system update (shroomery/lib.sh has the same names): versions per package that
+    // `paccache` keeps (an integer 1-20, default 3) and the protected package patterns, one per line.
+    readonly property string cacheKeepFile: settings + "/cache-keep"
+    readonly property string protectedFile: settings + "/recovery-protected"
 
     readonly property string setWallpaper: scripts + "/wallpaper.sh"
     readonly property string clearWallpaperCache: scripts + "/clear-wallpaper-cache.sh"
@@ -57,9 +61,14 @@ Singleton {
     readonly property string checkUpdates: scripts + "/check-updates.sh"
     readonly property string installUpdates: scripts + "/install-updates.sh"
     readonly property string terminal: scripts + "/terminal.sh"
+    readonly property string uninstallApp: scripts + "/uninstall-app.sh"
+    readonly property string pkgUpdate: scripts + "/pkg-update.sh"
+    // The copy in the repo; the installed one (recoveryScript) exists after the first apply.
+    readonly property string recoveryScriptSource: scripts + "/recovery.sh"
     readonly property string editor: scripts + "/editor.sh"
     readonly property string ocr: scripts + "/ocr.sh"
     readonly property string lidSwitch: scripts + "/lid-switch.sh"
+    readonly property string conservationMode: scripts + "/conservation-mode.sh"
     readonly property string hyprsunset: scripts + "/hyprsunset.sh"
     // Screen color sampler daemon (shroomery/screencolors/README.md).
     readonly property string screenColors: scripts + "/screen-colors.py"
@@ -105,6 +114,10 @@ Singleton {
     readonly property string weatherCache: cacheDir + "/weather.json"
     // Optional avatar (AccountsService-style ~/.face).
     readonly property string faceImage: home + "/.face"
+
+    // --- safe system update (root-owned, world-readable): known-good/ pending/ logs/ recovery.sh ---
+    readonly property string recoveryDir: "/var/lib/shroomery/recovery"
+    readonly property string recoveryScript: recoveryDir + "/recovery.sh"
 
     // --- system (read by DashboardPanel/SystemStats) ---
     readonly property string procDir: "/proc"

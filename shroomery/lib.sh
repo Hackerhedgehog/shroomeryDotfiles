@@ -51,6 +51,16 @@ ACCENT_SCHEMES=(scheme-tonal-spot scheme-vibrant scheme-expressive scheme-conten
 # How many of the wallpaper's colors the picker offers.
 WALLPAPER_COLOR_COUNT=3
 
+# Safe system update (scripts/pkg-update.sh). Root-owned storage, world-readable:
+# known-good/ pending/ logs/ recovery.sh. Archives in it are hardlinks into the
+# pacman cache, so both must be on one filesystem.
+RECOVERY_DIR="/var/lib/shroomery/recovery"
+PKG_CACHE_DIR="${PKG_CACHE_DIR:-/var/cache/pacman/pkg}"   # tests override it
+# Patterns of the protected package set (one per line; missing = built-in list).
+PROTECTED_FILE="$SHROOMERY_SETTINGS/recovery-protected"
+# How many versions per package `paccache` keeps (default 3).
+CACHE_KEEP_FILE="$SHROOMERY_SETTINGS/cache-keep"
+
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'

@@ -7,7 +7,8 @@ import qs.shared
 // Shows the number of pending system updates next to a package icon. The count
 // comes from shroomery/scripts/check-updates.sh, polled every 30 minutes. The
 // module hides itself completely while no updates are available; clicking it
-// runs shroomery/scripts/install-updates.sh.
+// runs shroomery/scripts/install-updates.sh, which opens Settings -> Update
+// (the safe system update).
 Rectangle {
     id: updates
 

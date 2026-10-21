@@ -39,6 +39,9 @@ hl.on("hyprland.start", function()
 	-- Start hypridle
 	hl.exec_cmd("hypridle")
 
+	-- Keep clipboard contents after the source app closes
+	hl.exec_cmd("wl-clip-persist --clipboard regular")
+
 	-- Load cliphist history
 	hl.exec_cmd("wl-paste --watch cliphist store")
 

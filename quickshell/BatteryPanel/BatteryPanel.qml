@@ -19,7 +19,7 @@ PopoutPanel {
     implicitHeight: Math.min(maxHeight, column.implicitHeight + 36)
     // The password prompt for logind.conf is another window: keep the panel
     // open while it is up.
-    holdOpen: IdleState.lidPending !== null
+    holdOpen: IdleState.lidPending !== null || ConservationState.busy
 
     // Lid choices for `key`; the plugged-in one can follow the battery one.
     // The current action stays listed even when this machine can't do it
@@ -34,6 +34,8 @@ PopoutPanel {
         }
         return list;
     }
+
+    onActiveChanged: if (active) ConservationState.refresh()
 
     readonly property var device: UPower.displayDevice
     readonly property int percent: device ? Math.round(device.percentage * 100) : 0
@@ -158,8 +160,16 @@ PopoutPanel {
                     spacing: 8
 
                     RowLayout {
+                        id: chargeRow
                         Layout.fillWidth: true
                         spacing: 10
+
+                        MouseArea {
+                            anchors.fill: parent
+                            enabled: ConservationState.available
+                            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            onClicked: ConservationState.toggle()
+                        }
 
                         Rectangle {
                             implicitWidth: 40
@@ -193,6 +203,21 @@ PopoutPanel {
                                 elide: Text.ElideRight
                             }
                         }
+                    }
+
+                    // Conservation mode (Lenovo): click the charge level to flip it.
+                    Text {
+                        Layout.fillWidth: true
+                        visible: ConservationState.available
+                        text: ConservationState.error !== "" ? ConservationState.error
+                            : ConservationState.busy ? "Waiting for the password…"
+                            : ConservationState.enabled ? "Conservation mode on · click the charge to turn off"
+                            : "Conservation mode off · click the charge to limit charging"
+                        color: ConservationState.error !== "" ? Theme.error
+                            : ConservationState.enabled ? Theme.primary : Theme.on_surface_variant
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 11
+                        wrapMode: Text.Wrap
                     }
 
                     // Charge bar.

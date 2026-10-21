@@ -14,7 +14,7 @@ hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("~/.config/quickshell/NetworkPanel/to
 hl.bind(mainMod .. " + K", hl.dsp.exec_cmd("~/.config/quickshell/KeybindsApp/toggle.sh"), { description = "Open the KeybindsApp" })
 hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("~/.config/quickshell/AudioPanel/toggle.sh"), { description = "Open the AudioPanel" })
 hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("~/.config/quickshell/WallpaperApp/toggle.sh"), { description = "Open the WallpaperApp" })
-hl.bind(mainMod .. " + U", hl.dsp.exec_cmd("~/.config/shroomery/scripts/install-updates.sh"), { description = "Open the UpdateApp" })
+hl.bind(mainMod .. " + U", hl.dsp.exec_cmd("~/.config/shroomery/scripts/install-updates.sh"), { description = "Settings → Update" })
 
 -- fr keyboard layout setup
 local is_fr = false
@@ -110,6 +110,7 @@ hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd("~/.config/shroomery/scripts/
 hl.bind(mainMod .. " + CTRL + S", hl.dsp.exec_cmd("~/.config/quickshell/QuickSettingsPanel/toggle.sh"), { description = "Open the quick settings" })
 hl.bind(mainMod .. " + CTRL + C", hl.dsp.exec_cmd("~/.config/quickshell/DashboardPanel/toggle.sh"), { description = "Open the dashboard" })
 hl.bind(mainMod .. " + SPACE", hl.dsp.exec_cmd("qs ipc call statusbar focus"), { description = "Expand statusbar and focus it for keyboard navigation" })
+hl.bind(mainMod .. " + ALT + S", hl.dsp.exec_cmd("~/.config/quickshell/SettingsApp/toggle.sh"), { description = "Open the SettingsApp" })
 hl.bind(mainMod .. " + ALT + G", hl.dsp.exec_cmd("~/.config/hypr/scripts/gamemode.sh"), { description = "Toggle game mode" })
 hl.bind(mainMod .. " + ALT + V", hl.dsp.exec_cmd("~/.config/quickshell/VisualizerApp/toggle.sh"), { description = "Visualizer: open setup / stop" })
 hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("~/.config/shroomery/scripts/power.sh -l"), { description = "Lock Screen" })

@@ -25,8 +25,9 @@ import "Emoji.js" as Emoji
 // SettingsApp).
 //
 // Keys: Up/Down/PageUp/PageDown move, Return runs the selection, Ctrl+Return
-// runs the typed text (run mode), Alt+Return (or a right click) runs an app or
-// command as root via pkexec (in a terminal with sudo for terminal apps), Tab/Shift+Tab switch mode, Backspace in an
+// runs the typed text (run mode), Alt+Return runs an app or
+// command as root via pkexec (in a terminal with sudo for terminal apps), a right click opens a menu
+// (Run as sudo, Open file location, Uninstall), Tab/Shift+Tab switch mode, Backspace in an
 // empty search goes up a folder (files mode), Escape closes. Left/Right move
 // within a grid and switch mode in a list (Ctrl+Left/Right move the text
 // cursor by word); past the edge of the emoji grid they continue in the
@@ -82,9 +83,31 @@ SlidePanel {
     readonly property int gridColumns: mode === "emoji" ? 7 : 4
     readonly property bool searching: query.trim() !== ""
 
+    // Uninstall flow (right-click menu): "" (none), "planning", "confirm",
+    // "running" or "done". The panel over the results shows the script's
+    // output; the default answer is the first button.
+    property var uninstallItem: null
+    property string uninstallPhase: ""
+    property var uninstallLines: []
+    property bool uninstallDefaultYes: false
+    property bool uninstallOk: false
+    property int uninstallChoice: 0
+    readonly property var uninstallButtons: uninstallPhase === "confirm"
+        ? (uninstallDefaultYes ? ["Yes", "No"] : ["No", "Yes"]) : ["Close"]
+
+    escapeHandler: function () {
+        if (root.uninstallPhase === "")
+            return false;
+        if (root.uninstallPhase !== "running" && root.uninstallPhase !== "planning")
+            root.closeUninstall();
+        return true;
+    }
+
     onIsOpenChanged: {
         if (!isOpen)
             return;
+        if (uninstallPhase !== "running" && uninstallPhase !== "planning")
+            closeUninstall();
         modeIndex = 0;
         filesFolder = Paths.home;
         searchField.text = "";
@@ -321,6 +344,131 @@ SlidePanel {
         }
     }
 
+    // Folder holding an item: the parent of a file or folder, the directory of
+    // the executable for an app.
+    function openLocation(item) {
+        if (item.kind === "file" || item.kind === "dir") {
+            const dir = item.path.replace(/\/[^\/]*$/, "") || "/";
+            Quickshell.execDetached(["xdg-open", dir]);
+        } else if (item.kind === "app") {
+            const cmd = Array.from(item.entry.command);
+            Quickshell.execDetached(["sh", "-c",
+                "p=$(command -v -- \"$1\") && exec xdg-open \"$(dirname -- \"$(readlink -f -- \"$p\")\")\"", "sh", cmd[0] ?? ""]);
+        }
+        root.close();
+    }
+
+    function closeUninstall() {
+        root.uninstallPhase = "";
+        root.uninstallItem = null;
+        root.uninstallLines = [];
+        searchField.forceActiveFocus();
+    }
+
+    function addUninstallLine(line) {
+        root.uninstallLines = root.uninstallLines.concat([line]);
+    }
+
+    // First step: ask uninstall-app.sh what it would remove.
+    function uninstall(item) {
+        root.uninstallItem = item;
+        root.uninstallLines = [];
+        root.uninstallChoice = 0;
+        root.uninstallOk = false;
+        root.uninstallDefaultYes = false;
+        root.uninstallPhase = "planning";
+        planProc.command = [Paths.uninstallApp, "--plan", item.entry.id];
+        planProc.running = true;
+    }
+
+    function confirmUninstall(yes) {
+        if (!yes) {
+            root.closeUninstall();
+            return;
+        }
+        root.uninstallLines = [];
+        root.uninstallPhase = "running";
+        runProc.command = [Paths.uninstallApp, "--run", root.uninstallItem.entry.id];
+        runProc.running = true;
+    }
+
+    // Enter on the highlighted button.
+    function pressUninstallButton(index) {
+        if (root.uninstallPhase === "confirm")
+            root.confirmUninstall(root.uninstallButtons[index] === "Yes");
+        else if (root.uninstallPhase === "done")
+            root.closeUninstall();
+    }
+
+    function uninstallKey(event) {
+        const k = event.key;
+        if (root.uninstallPhase === "confirm") {
+            if (k === Qt.Key_Left || k === Qt.Key_Right || k === Qt.Key_Up || k === Qt.Key_Down
+                    || k === Qt.Key_Tab || k === Qt.Key_Backtab)
+                root.uninstallChoice = 1 - root.uninstallChoice;
+            else if (k === Qt.Key_Y)
+                root.confirmUninstall(true);
+            else if (k === Qt.Key_N)
+                root.confirmUninstall(false);
+            else if (k === Qt.Key_Return || k === Qt.Key_Enter)
+                root.pressUninstallButton(root.uninstallChoice);
+        } else if (root.uninstallPhase === "done" && (k === Qt.Key_Return || k === Qt.Key_Enter)) {
+            root.closeUninstall();
+        }
+    }
+
+    Process {
+        id: planProc
+        stdout: SplitParser {
+            onRead: line => {
+                if (line.startsWith("default="))
+                    root.uninstallDefaultYes = line === "default=y";
+                else
+                    root.addUninstallLine(line);
+            }
+        }
+        onExited: code => {
+            root.uninstallOk = false;
+            root.uninstallPhase = code === 0 ? "confirm" : "done";
+        }
+    }
+
+    Process {
+        id: runProc
+        stdout: SplitParser {
+            onRead: line => root.addUninstallLine(line)
+        }
+        onExited: code => {
+            root.uninstallOk = code === 0;
+            if (code !== 0)
+                root.addUninstallLine("Failed (exit " + code + ").");
+            root.uninstallChoice = 0;
+            root.uninstallPhase = "done";
+        }
+    }
+
+    // Right-click menu entries for an item (empty: nothing to offer).
+    function menuActions(item) {
+        const list = [];
+        if (item.kind === "app" || item.kind === "run")
+            list.push({ "label": "Run as sudo", "callback": () => root.activate(item, true) });
+        if (item.kind === "app" || item.kind === "file" || item.kind === "dir")
+            list.push({ "label": "Open file location", "callback": () => root.openLocation(item) });
+        if (item.kind === "app")
+            list.push({ "label": "Uninstall", "callback": () => root.uninstall(item) });
+        return list;
+    }
+
+    function openMenu(item, pos) {
+        const actions = root.menuActions(item);
+        if (actions.length === 0)
+            return;
+        contextMenu.actions = actions;
+        contextMenu.x = Math.max(8, Math.min(card.width - contextMenu.width - 8, pos.x));
+        contextMenu.y = Math.max(8, Math.min(card.height - contextMenu.height - 8, pos.y));
+        contextMenu.visible = true;
+    }
+
     // Return: a finished calculation is copied, otherwise the selection runs
     // (in run mode, typed text with no match runs as a command).
     function accept(asRoot) {
@@ -477,6 +625,11 @@ SlidePanel {
                             onTextChanged: root.query = text
 
                             Keys.onPressed: event => {
+                                if (root.uninstallPhase !== "") {
+                                    root.uninstallKey(event);
+                                    event.accepted = true;
+                                    return;
+                                }
                                 const ctrl = event.modifiers & Qt.ControlModifier;
                                 const alt = event.modifiers & Qt.AltModifier;
                                 const grid = root.gridView;
@@ -791,9 +944,9 @@ SlidePanel {
                         }
                         TapHandler {
                             acceptedButtons: Qt.RightButton
-                            onTapped: {
+                            onTapped: eventPoint => {
                                 root.selectedIndex = row.index;
-                                root.activate(row.modelData, true);
+                                root.openMenu(row.modelData, row.mapToItem(card, eventPoint.position));
                             }
                         }
                     }
@@ -881,9 +1034,9 @@ SlidePanel {
                         }
                         TapHandler {
                             acceptedButtons: Qt.RightButton
-                            onTapped: {
+                            onTapped: eventPoint => {
                                 root.selectedIndex = cell.index;
-                                root.activate(cell.modelData, true);
+                                root.openMenu(cell.modelData, cell.mapToItem(card, eventPoint.position));
                             }
                         }
                     }
@@ -898,6 +1051,88 @@ SlidePanel {
             color: "transparent"
             border.color: Theme.primary
             border.width: 1
+        }
+
+        // Uninstall: what the script says, and the confirmation buttons.
+        Rectangle {
+            anchors.fill: parent
+            radius: card.radius
+            color: Theme.background
+            visible: root.uninstallPhase !== ""
+
+            MouseArea {
+                anchors.fill: parent
+            }
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 2 * root.em
+                spacing: root.em
+
+                Text {
+                    Layout.fillWidth: true
+                    text: root.uninstallPhase === "planning" ? "Checking…"
+                        : (root.uninstallPhase === "confirm" ? (root.uninstallLines[0] ?? "")
+                        : "Uninstall " + (root.uninstallItem?.name ?? ""))
+                    color: Theme.on_surface
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 1.4 * root.em
+                    font.bold: true
+                    elide: Text.ElideRight
+                }
+
+                ListView {
+                    id: uninstallLog
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+                    // The first line is the title while confirming.
+                    model: root.uninstallPhase === "confirm" ? root.uninstallLines.slice(1) : root.uninstallLines
+                    onCountChanged: positionViewAtEnd()
+                    delegate: Text {
+                        required property string modelData
+                        width: uninstallLog.width
+                        text: modelData
+                        wrapMode: Text.Wrap
+                        color: root.uninstallPhase === "done" && !root.uninstallOk ? Theme.error : Theme.on_surface
+                        font.family: Theme.fontFamily
+                        font.pixelSize: root.em
+                    }
+                }
+
+                RowLayout {
+                    Layout.alignment: Qt.AlignRight
+                    spacing: root.em
+                    visible: root.uninstallPhase === "confirm" || root.uninstallPhase === "done"
+
+                    Repeater {
+                        model: root.uninstallButtons
+
+                        PanelButton {
+                            required property int index
+                            required property string modelData
+                            text: modelData
+                            filled: index === root.uninstallChoice
+                            focusPolicy: Qt.NoFocus
+                            onHoveredChanged: if (hovered) root.uninstallChoice = index
+                            onClicked: root.pressUninstallButton(index)
+                        }
+                    }
+                }
+            }
+        }
+
+        // Closes the right-click menu on an outside click.
+        MouseArea {
+            anchors.fill: parent
+            visible: contextMenu.visible
+            acceptedButtons: Qt.AllButtons
+            onPressed: contextMenu.visible = false
+        }
+
+        InlineMenu {
+            id: contextMenu
+            onCloseRequested: contextMenu.visible = false
         }
     }
 }
