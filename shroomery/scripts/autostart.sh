@@ -12,8 +12,6 @@ if [ ! -s "$WALLPAPER_CACHE_FILE" ]; then
     info "Wallpaper cache file created"
 fi
 
-nm-applet --indicator &
-
 # Quickshell reads its icon theme from QS_ICON_THEME, not from GTK. Hyprland
 # normally exports it; fall back to the GTK setting for a manual run.
 if [ -z "$QS_ICON_THEME" ] && [ -f "$GTK3_SETTINGS_FILE" ]; then

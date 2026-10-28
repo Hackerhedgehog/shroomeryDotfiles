@@ -2,11 +2,14 @@ import Quickshell
 import Quickshell.Services.SystemTray
 import QtQuick
 import QtQuick.Layouts
+import qs.shared
 
-// System tray (StatusNotifierItem hosts).
+// System tray (StatusNotifierItem hosts): the icons apps like Steam put in
+// the tray. Left click activates the app, middle click is its secondary
+// action, right click (or left click on a menu-only item) opens its menu.
 RowLayout {
     id: tray
-    spacing: 10
+    spacing: 2
 
     // Collapse the slot when there are no tray items, so the right Repeater
     // hides this Loader and the RowLayout doesn't reserve spacing around an
@@ -15,26 +18,30 @@ RowLayout {
     readonly property bool collapsed: SystemTray.items.values.length === 0
 
     // True while any tray context menu is open. The bar pins itself expanded
-    // while this is set: the tray lives in the right area, which is only
-    // visible/enabled when the pill is expanded, so without this the popup's
-    // anchor item would vanish (pointer leaves the bar -> hover lost ->
-    // collapse) and the menu would be dismissed the instant it opened.
+    // while this is set: placed in the left/right area, which is only
+    // visible/enabled when the pill is expanded, the popup's anchor item would
+    // otherwise vanish (pointer leaves the bar -> hover lost -> collapse) and
+    // the menu would be dismissed the instant it opened.
     property int openMenuCount: 0
     readonly property bool menuOpen: openMenuCount > 0
 
     Repeater {
         model: SystemTray.items
 
-        delegate: MouseArea {
+        // Same accent circle on hover as BarButton; the icon keeps its colors.
+        delegate: Rectangle {
             id: trayItem
             required property var modelData
 
-            implicitWidth: 20
-            implicitHeight: 20
+            implicitWidth: 30
+            implicitHeight: 30
+            radius: 15
             Layout.alignment: Qt.AlignVCenter
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            color: mouseArea.containsMouse ? Theme.primary : "transparent"
+
+            Behavior on color {
+                ColorAnimation { duration: 500; easing.type: Easing.OutQuint }
+            }
 
             Image {
                 anchors.centerIn: parent
@@ -46,11 +53,21 @@ RowLayout {
                 fillMode: Image.PreserveAspectFit
             }
 
-            onClicked: (mouse) => {
-                if (mouse.button === Qt.LeftButton && !modelData.onlyMenu) {
-                    modelData.activate()
-                } else if (modelData.hasMenu) {
-                    trayMenu.open()
+            MouseArea {
+                id: mouseArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
+
+                onClicked: (mouse) => {
+                    const item = trayItem.modelData
+                    if (mouse.button === Qt.MiddleButton)
+                        item.secondaryActivate()
+                    else if (mouse.button === Qt.LeftButton && !item.onlyMenu)
+                        item.activate()
+                    else if (item.hasMenu)
+                        trayMenu.open()
                 }
             }
 

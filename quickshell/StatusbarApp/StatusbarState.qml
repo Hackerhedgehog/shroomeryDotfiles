@@ -23,7 +23,7 @@ QtObject {
         "modules":{ "left": ["workspaces"],
                     "centerLeft": ["launcher", "taskbar"],
                     "center": ["clock"],
-                    "centerRight": [],
+                    "centerRight": ["systemtray"],
                     "right": ["battery", "volume", "notifications", "bluetooth", "network", "settings", "power"] },
         "border": { "width": 2, "colorTop": "", "colorBottom": "" },
         "opacity":{ "collapsed": 0.6, "expanded": 0.8 },

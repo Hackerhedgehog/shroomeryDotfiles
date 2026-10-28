@@ -15,7 +15,7 @@
         "left": ["workspaces", "terminal"],
         "centerLeft": ["launcher", "taskbar"],
         "center": ["clock"],
-        "centerRight": [],
+        "centerRight": ["systemtray"],
         "right": [
             "updates",
             "battery",

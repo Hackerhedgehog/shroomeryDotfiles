@@ -131,8 +131,8 @@ PanelWindow {
     Component { id: cSwaync;     SwayncModule {} }
     Component { id: cNotifications; NotificationsModule {} }
     // True while a system-tray context menu is open. Kept at window scope so
-    // the pill can pin itself expanded while a menu is up (the tray lives in
-    // the right area, which only exists while expanded).
+    // the pill can pin itself expanded while a menu is up (needed when the
+    // tray is placed in the left/right area, which only exists while expanded).
     property bool trayMenuOpen: false
     Component {
         id: cSystemTray

@@ -29,7 +29,7 @@ $XDG_RUNTIME_DIR/shroomery/  runtime state, gone after a reboot (lib.sh SHROOMER
 
 | Script | What it does | Called by |
 |--------|--------------|-----------|
-| `scripts/autostart.sh` | Session start: creates the cache, starts `nm-applet`, `qs` and the OverviewApp instance, restores the wallpaper + theme. Logs to `~/.cache/shroomery/autostart.log`. | `hypr/autostart.lua` |
+| `scripts/autostart.sh` | Session start: creates the cache, starts `qs` and the OverviewApp instance, restores the wallpaper + theme. Logs to `~/.cache/shroomery/autostart.log`. | `hypr/autostart.lua` |
 | `scripts/wallpaper.sh [IMAGE] [opts]` | Applies the wallpaper effect, sets the image with `awww` (a video or GIF instead goes to `animated-wallpaper.sh start`, without effect; theming and the variants then use its first frame, `~/.cache/shroomery/frames/`), runs `matugen` on it (seeded by the accent settings: the chosen one of the image's colors, or the fixed accent color; also writes `~/.cache/shroomery/wallpaper-colors`), reloads theme consumers, then renders the blurred/square copies in the background (exits without waiting for them). `--random [DIR]`, `--skip-wallpaper`, `--skip-theming`, `--monitor`, `--crop-gravity`. | WallpaperApp, `autostart.sh`, `apply-theme.sh`, keybind |
 | `scripts/animated-wallpaper.sh` | Animated wallpapers with `mpvpaper` (`no-audio loop hwdec=auto profile=fast panscan=1.0`, `-p -a FULL`: pauses itself while hidden or a window is fullscreen) above awww's still. `start FILE [OUTPUT]` (default `ALL`; one monitor out of an `ALL` one splits it into one mpvpaper per remaining monitor), `stop [OUTPUT]`, `pause` (awww gets a still of the frame on screen via mpv IPC `screenshot-to-file`, then mpvpaper stops), `resume` (from where it paused), `sync` (pause on battery or in gamemode, else resume), `status`. What plays is kept in `~/.cache/shroomery/animated-wallpaper`. | `wallpaper.sh`, `autostart.sh`, `listeners/animated-wallpaper.sh`, `hypr/scripts/gamemode.sh` |
 | `scripts/screen-colors.py` | Screen color sampler daemon (protocol v2): per monitor it rebuilds a small picture of the screen (wallpaper — an animated one decoded by `ffmpeg` in step with mpv — + visible windows via `grim -T`, piped, never written to disk) and each client subscribes to its own monitor, source (screen / wallpaper) and regions (ring, edges, rectangles); smoothed colors on `$XDG_RUNTIME_DIR/shroomery/screen-colors.sock` (protocol in `screencolors/README.md`). One copy at a time; exits 5 s after its last client. `--rate`, `--idle-exit`, `--pattern` (test picture), `--watch [--monitor M] [--subscribe JSON\|@file]`. | quickshell VisualizerApp overlay + setup preview (later: the LED bridge) |
@@ -518,7 +518,7 @@ toggle-theme.sh ─► gtk settings.ini ─► listeners/gtk-theme.sh ─► app
 `mpvpaper` + `ffmpeg` (animated wallpapers, `python3` for mpv IPC, `udevadm` for the power listener),
 `hyprctl`, `hyprlock`, `notify-send`, `inotifywait` (inotify-tools),
 `gum`, `figlet` (optional), `yay` or `paru` + `checkupdates` (pacman-contrib),
-`flatpak` (optional), `nm-applet`, `swaync-client`, `flock`.
+`flatpak` (optional), `swaync-client`, `flock`.
 Notifications: Quickshell is the notification daemon; swaync's systemd user unit is masked
 (`systemctl --user mask swaync.service`) so D-Bus can't start it first — `unmask` to go back.
 `ocr.sh`: `grim`, `slurp`, `hyprpicker`, `tesseract` + a `tesseract-data-*` language.
