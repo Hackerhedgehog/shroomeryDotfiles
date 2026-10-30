@@ -49,7 +49,8 @@ hl.bind(mainMod .. " + C", hl.dsp.window.close(), { description = "Kill active w
 hl.bind(mainMod .. " + X", hl.dsp.window.move({ workspace = "special:minimized", follow = false }), { description = "Minimize active window" })
 --hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("~/.config/hypr/scripts/killactive.sh"), { description = "Kill active window" })
 -- hl.bind(mainMod .. " + Q", hl.dsp.window.close(), { description = "Kill active window" })
-hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd("hyprctl activewindow | grep pid | tr -d 'pid:' | xargs kill"), { description = "Quit active window and all open instances" })
+-- Force kill (SIGKILL) the active window's process, for apps that froze and ignore Super+C.
+hl.bind(mainMod .. " + SHIFT + C", hl.dsp.window.kill(), { description = "Force kill the active window's process" })
 hl.bind(mainMod .. " + F11", hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" }), { description = "Toggle Fullscreen" })
 hl.bind(mainMod .. " + F10", hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" }), { description = "Toggle Maximize Window" })
 hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }), { description = "Toggle Floating" })
