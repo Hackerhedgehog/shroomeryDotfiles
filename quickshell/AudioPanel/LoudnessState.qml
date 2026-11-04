@@ -148,6 +148,26 @@ Singleton {
         }
     }
 
+    // Make a real device the one that plays. While the chain runs it — not
+    // the device — is the default sink, so the chain is re-pointed instead
+    // of being bypassed.
+    function useOutput(node) {
+        if (!node)
+            return;
+        if (root.running)
+            root.retarget(node);
+        else
+            AudioState.selectSink(node);
+    }
+
+    // A card the audio panel turned on: its new sink becomes the output.
+    Connections {
+        target: AudioState
+        function onOutputReady(node) {
+            root.useOutput(node);
+        }
+    }
+
     // ------------------------------------------------------------ lifecycle
 
     // Pick the device the chain should feed, in preference order. The
@@ -179,6 +199,10 @@ Singleton {
         root.targetSinkName = target;
         writeProc.pendingConf = Loudness.renderConf(root.values, root.targetSinkName);
         writeProc.command = ["sh", "-c", "cat > \"$1\"", "sh", root.confPath];
+        // onStarted turns stdin off to send cat its EOF. Turn it back on, or
+        // a second start gets a stdin that is never written or closed and
+        // cat waits forever, so the chain never launches.
+        writeProc.stdinEnabled = true;
         writeProc.running = true;
     }
 

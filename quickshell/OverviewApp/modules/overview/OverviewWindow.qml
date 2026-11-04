@@ -61,6 +61,8 @@ Item { // Window
     property bool previewsEnabled: Config.options.overview.previewsEnabled
     property bool includeInactiveMonitorPreviews: Config.options.overview.includeInactiveMonitorPreviews
     property int previewRecaptureDelayMs: Config.options.overview.previewRecaptureDelayMs
+    // Rounded like the window list tiles elsewhere in the shell.
+    readonly property int windowRadius: 10
     property real windowOverlayOpacity: Math.max(0, Math.min(1, Config.options.overview.effects.windowOverlayOpacity))
     property bool glassMode: Config.options.overview.effects.glassMode
     property real glassShineOpacity: Math.max(0, Math.min(1, Config.options.overview.effects.glassShineOpacity))
@@ -72,7 +74,7 @@ Item { // Window
     }
     property bool livePreviewEnabled: previewsEnabled && previewMode === "live"
     property bool shouldCapturePreview: {
-        if (!GlobalStates.overviewOpen || !previewsEnabled || !previewCaptureEnabled)
+        if (!GlobalStates.overviewShown || !previewsEnabled || !previewCaptureEnabled)
             return false;
         if (includeInactiveMonitorPreviews)
             return true;
@@ -136,7 +138,7 @@ Item { // Window
     Rectangle {
         visible: (root.windowData?.monitor ?? -1) === root.widgetMonitorId
         anchors.fill: parent
-        radius: Appearance.rounding.windowRounding * root.scale
+        radius: root.windowRadius
         color: root.glassMode
             ? ColorUtils.mix(Appearance.colors.colLayer2, Appearance.colors.colLayer0, 0.38)
             : Appearance.colors.colLayer2
@@ -170,7 +172,7 @@ Item { // Window
 
     Rectangle {
         anchors.fill: parent
-        radius: Appearance.rounding.windowRounding * root.scale
+        radius: root.windowRadius
         color: pressed ? ColorUtils.applyAlpha(Appearance.colors.colLayer2Active, Math.min(1, root.effectiveWindowOverlayOpacity + 0.30)) :
             hovered ? ColorUtils.applyAlpha(Appearance.colors.colLayer2Hover, Math.min(1, root.effectiveWindowOverlayOpacity + 0.20)) :
             ColorUtils.applyAlpha(
@@ -238,7 +240,7 @@ Item { // Window
             anchors.centerIn: parent
             width: root.width
             height: root.height
-            radius: Appearance.rounding.windowRounding * root.scale
+            radius: root.windowRadius
         }
     }
 

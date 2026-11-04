@@ -38,7 +38,7 @@
       }
     },
     "sizes": {
-      "elevationMargin": 10
+      "elevationMargin": 16
     }
   },
   "overview": {
@@ -47,12 +47,13 @@
     "scale": 0.16,
     "enable": true,
     "hideEmptyRows": true,
-    "workspaceSpacing": 5,
-    "backgroundPadding": 10,
-    "workspaceNumberBaseSize": 250
-  },
-  "position": {
-    "topMargin": 100
+    "workspaceSpacing": 10,
+    "backgroundPadding": 20,
+    "workspaceNumberBaseSize": 250,
+    "effects": {
+      "panelOpacity": 0.96,
+      "workspaceOpacity": 1
+    }
   },
   "windowPreview": {
     "iconToWindowRatio": 0.25,

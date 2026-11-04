@@ -248,9 +248,63 @@ Singleton {
 
     function setCardProfile(node, profile) {
         const card = root.cardForNode(node);
-        if (!card || profile === "")
+        if (card)
+            root.setProfileForCard(card.name, profile);
+    }
+
+    // By card name, for cards that have no node (profile "off").
+    function setProfileForCard(cardName, profile) {
+        if (!cardName || profile === "")
             return;
-        root._runAction(["pactl", "set-card-profile", card.name, profile], "Could not switch the card profile.");
+        root._runAction(["pactl", "set-card-profile", cardName, profile], "Could not switch the card profile.");
+    }
+
+    // Cards with an output profile but no sink right now — switched "off"
+    // (or to an input-only profile). They have no PipeWire node, so the
+    // output list shows them from here, with a button to turn them on.
+    readonly property var offCards: root.cards.filter(card => {
+        if (card.outputProfile === "")
+            return false;
+        for (let i = 0; i < root.sinks.length; i++) {
+            const owner = root.cardForNode(root.sinks[i]);
+            if (owner && owner.name === card.name)
+                return false;
+        }
+        return true;
+    })
+
+    // Name of the card being turned on; its sink becomes the active output
+    // once it shows up (outputReady), unless that takes longer than the
+    // timer allows.
+    property string pendingCard: ""
+    signal outputReady(var node)
+
+    function turnOnCard(card) {
+        if (!card || card.outputProfile === "")
+            return;
+        root.pendingCard = card.name;
+        pendingCardTimer.restart();
+        root.setProfileForCard(card.name, card.outputProfile);
+    }
+
+    function _checkPendingCard() {
+        if (root.pendingCard === "")
+            return;
+        for (let i = 0; i < root.sinks.length; i++) {
+            const owner = root.cardForNode(root.sinks[i]);
+            if (owner && owner.name === root.pendingCard) {
+                root.pendingCard = "";
+                pendingCardTimer.stop();
+                root.outputReady(root.sinks[i]);
+                return;
+            }
+        }
+    }
+
+    Timer {
+        id: pendingCardTimer
+        interval: 8000
+        onTriggered: root.pendingCard = ""
     }
 
     function setPort(node, port) {
@@ -302,6 +356,12 @@ Singleton {
             const card = parsed[i];
             const props = card.properties || {};
             const profiles = [];
+            // The profile "Turn on" switches an off card to: the
+            // highest-priority available one with an output, the same pick
+            // WirePlumber makes. pro-audio (raw channels, priority 1) only
+            // when nothing else is available.
+            let outputProfile = "";
+            let outputPriority = -1;
             for (const key in card.profiles) {
                 const profile = card.profiles[key];
                 if (profile.available === false)
@@ -310,6 +370,11 @@ Singleton {
                     "name": key,
                     "description": profile.description || key
                 });
+                const priority = profile.priority || 0;
+                if ((profile.sinks || 0) > 0 && priority > outputPriority) {
+                    outputProfile = key;
+                    outputPriority = priority;
+                }
             }
             list.push({
                 "index": card.index,
@@ -318,11 +383,13 @@ Singleton {
                 "objectId": String(props["object.id"] || ""),
                 "alsaCard": String(props["api.alsa.card"] || ""),
                 "activeProfile": card.active_profile || "",
+                "outputProfile": outputProfile,
                 "profiles": profiles
             });
         }
         root.cards = list;
         root.pactlLoaded = true;
+        root._checkPendingCard();
     }
 
     function _ingestDevices(text, isSink) {
@@ -365,6 +432,7 @@ Singleton {
             };
         }
         root.deviceInfo = map;
+        root._checkPendingCard();
     }
 
     Process {
@@ -429,8 +497,10 @@ Singleton {
     }
 
     // A device appearing or disappearing changes the pactl picture too.
+    // (Also while a card is being turned on: its sink is matched to the card
+    // through pactl, so the refresh has to follow the node appearing.)
     onSinksChanged: {
-        if (root.panelOpen)
+        if (root.panelOpen || root.pendingCard !== "")
             root.refresh();
     }
 

@@ -20,22 +20,32 @@ Scope {
             readonly property HyprlandMonitor monitor: Hyprland.monitorFor(root.screen)
             property bool monitorIsFocused: (Hyprland.focusedMonitor?.id == monitor?.id)
             property bool blurEnabled: Config.options.overview.effects.enableBlur
-            property bool backdropEnabled: Config.options.overview.effects.enableBackdrop
-            property real backdropOpacity: Math.max(0, Math.min(1, Config.options.overview.effects.backdropOpacity))
             property bool closeOnFocusLoss: Config.options.overview.closeOnFocusLoss ?? true
             screen: modelData
-            visible: GlobalStates.overviewOpen
+            // Stays mapped while it slides away (GlobalStates.overviewShown).
+            visible: GlobalStates.overviewShown
 
             WlrLayershell.namespace: blurEnabled ? "quickshell:overview-blur" : "quickshell:overview"
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+            exclusionMode: ExclusionMode.Ignore
             color: "transparent"
 
-            anchors {
-                top: true
-                bottom: true
-                left: true
-                right: true
+            // Like the other app windows (shared/ui/CenterPanel): centered on the
+            // screen, dropping in from the top edge and flying back up on close.
+            anchors.top: true
+            implicitWidth: overviewLoader.item?.implicitWidth ?? 0
+            implicitHeight: overviewLoader.item?.implicitHeight ?? 0
+
+            readonly property int shownMargin: Math.max(0, Math.round(((screen?.height ?? 1080) - implicitHeight) / 2))
+            property real currentMargin: GlobalStates.overviewOpen ? shownMargin : -(implicitHeight + 48)
+            margins.top: currentMargin
+
+            Behavior on currentMargin {
+                NumberAnimation {
+                    duration: GlobalStates.slideDuration
+                    easing.type: Easing.OutQuint
+                }
             }
 
             HyprlandFocusGrab {
@@ -85,37 +95,12 @@ Scope {
                 }
             }
 
-            // Keep the layershell surface full-screen so backdrop/blur are not constrained by content size.
-            implicitWidth: screen.width
-            implicitHeight: screen.height
-
+            // Outside clicks close it through the focus grab above.
             Item {
                 id: keyHandler
                 anchors.fill: parent
-                visible: GlobalStates.overviewOpen
                 focus: GlobalStates.overviewOpen
                 z: 0
-
-                Rectangle {
-                    id: backdropLayer
-                    anchors.fill: parent
-                    visible: root.backdropEnabled
-                    color: "#000000"
-                    opacity: root.backdropOpacity
-                    z: 0
-                }
-
-                MouseArea {
-                    id: outsideClickCatcher
-                    anchors.fill: parent
-                    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-                    enabled: root.closeOnFocusLoss && GlobalStates.overviewOpen
-                    z: 0
-                    onPressed: mouse => {
-                        GlobalStates.overviewOpen = false;
-                        mouse.accepted = true;
-                    }
-                }
 
                 Keys.onPressed: event => {
                     // close: Escape or Enter
@@ -214,23 +199,14 @@ Scope {
                 }
             }
 
-            ColumnLayout {
-                id: columnLayout
-                visible: GlobalStates.overviewOpen
+            Loader {
+                id: overviewLoader
+                anchors.fill: parent
                 z: 1
-                anchors {
-                    horizontalCenter: parent.horizontalCenter
-                    top: parent.top
-                    topMargin: Config.options.position.topMargin
-                }
-
-                Loader {
-                    id: overviewLoader
-                    active: Config?.options.overview.enable ?? true
-                    sourceComponent: OverviewWidget {
-                        panelWindow: root
-                        visible: true
-                    }
+                active: Config?.options.overview.enable ?? true
+                sourceComponent: OverviewWidget {
+                    panelWindow: root
+                    visible: true
                 }
             }
         }

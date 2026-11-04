@@ -89,11 +89,15 @@ PopoutPanel {
         }
     }
 
-    // One selectable output/input device.
+    // One selectable output/input device: a PipeWire `node`, or a sound card
+    // that is switched off (`soundCard`, an AudioState.cards entry), which
+    // has no node until it is turned on.
     component DeviceCard: Rectangle {
         id: card
         property var node: null
+        property var soundCard: null
         property bool active: false
+        readonly property bool turningOn: !!soundCard && AudioState.pendingCard === soundCard.name
 
         Layout.fillWidth: true
         implicitHeight: 54
@@ -118,8 +122,8 @@ PopoutPanel {
                 spacing: 1
                 Text {
                     Layout.fillWidth: true
-                    text: AudioState.displayName(card.node)
-                    color: Theme.on_surface
+                    text: card.soundCard ? card.soundCard.description : AudioState.displayName(card.node)
+                    color: card.soundCard ? Theme.on_surface_variant : Theme.on_surface
                     font.family: Theme.fontFamily
                     font.pixelSize: 13
                     font.bold: true
@@ -127,7 +131,7 @@ PopoutPanel {
                 }
                 Text {
                     Layout.fillWidth: true
-                    text: AudioState.describeDevice(card.node)
+                    text: card.soundCard ? "Off" : AudioState.describeDevice(card.node)
                     color: Theme.on_surface_variant
                     font.family: Theme.fontFamily
                     font.pixelSize: 11
@@ -136,19 +140,15 @@ PopoutPanel {
             }
 
             PanelButton {
-                text: card.active ? "Active" : "Select"
-                enabled: !card.active
+                text: card.soundCard ? (card.turningOn ? "Turning on…" : "Turn on") : (card.active ? "Active" : "Select")
+                enabled: card.soundCard ? !card.turningOn : !card.active
                 tonal: card.active
                 onClicked: {
-                    if (card.node.isSink) {
-                        // While the compressor is running it — not the physical
-                        // device — is the default sink, so picking a device
-                        // re-points the chain rather than bypassing it.
-                        if (LoudnessState.running)
-                            LoudnessState.retarget(card.node);
-                        else
-                            AudioState.selectSink(card.node);
-                    } else
+                    if (card.soundCard)
+                        AudioState.turnOnCard(card.soundCard);
+                    else if (card.node.isSink)
+                        LoudnessState.useOutput(card.node);
+                    else
                         AudioState.selectSource(card.node);
                 }
             }
@@ -418,8 +418,18 @@ PopoutPanel {
                         }
                     }
 
+                    // Cards switched off have no sink node; list them too so
+                    // they can be turned back on.
+                    Repeater {
+                        model: AudioState.offCards
+                        delegate: DeviceCard {
+                            required property var modelData
+                            soundCard: modelData
+                        }
+                    }
+
                     EmptyNote {
-                        visible: AudioState.sinks.length === 0
+                        visible: AudioState.sinks.length === 0 && AudioState.offCards.length === 0
                         text: "No output devices found."
                     }
 

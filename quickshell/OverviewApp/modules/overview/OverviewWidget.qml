@@ -28,7 +28,16 @@ Item {
     property var workspaceIds: HyprlandData.workspaceIds
     property var monitorData: HyprlandData.monitors.find(m => m.id === root.monitor?.id)
     property real scale: Config.options.overview.scale
-    property color activeBorderColor: Appearance.colors.colSecondary
+    // Same radii as the other apps: the card of shared/ui/CenterPanel and
+    // shared/ui/Card for the workspace tiles.
+    readonly property int cardRadius: 24
+    readonly property int tileRadius: 14
+    // Blurred copy of the wallpaper, written by ~/.config/shroomery/scripts/wallpaper.sh
+    // (the launcher's backdrop too). Re-read on every open to pick up a new wallpaper.
+    readonly property string blurredWallpaperPath: Quickshell.env("HOME") + "/.cache/shroomery/blurred_wallpaper.png"
+    property int wallpaperRevision: 0
+    readonly property string blurredWallpaperSource: "file://" + blurredWallpaperPath + "?" + wallpaperRevision
+    property color activeBorderColor: Appearance.m3colors.m3primary
 
     property real workspaceImplicitWidth: Math.round((monitorData?.transform % 2 === 1) ?
         ((monitor.height / monitor.scale - (monitorData?.reserved?.[0] ?? 0) - (monitorData?.reserved?.[2] ?? 0)) * root.scale) :
@@ -125,10 +134,12 @@ Item {
     readonly property bool hasSpecialEmptyWorkspaceWallpaper: `${specialEmptyWorkspaceWallpaperPath ?? ""}`.trim().length > 0
     readonly property string createSpecialWorkspaceTarget: "__create_special_workspace__"
     readonly property real specialWorkspaceTileHeight: root.workspaceImplicitHeight
-    readonly property real specialStripGap: workspaceSpacing * 1.8
-    readonly property real specialStripPadding: Math.max(8, 12 * root.scale)
-    readonly property real specialStripTitleHeight: Math.max(14, Appearance.font.pixelSize.small * root.scale)
-    readonly property real specialStripTitleGap: Math.max(6, 8 * root.scale)
+    // Extra room between the normal grid and the special tiles (on top of the
+    // layout spacing above and below the spacer: 4 × workspaceSpacing in all).
+    readonly property real specialStripGap: workspaceSpacing * 2
+    readonly property real specialStripPadding: 0
+    readonly property real specialStripTitleHeight: 0
+    readonly property real specialStripTitleGap: 0
     readonly property int totalSpecialTiles: visibleSpecialWorkspaces.length + 1
     readonly property real specialSectionWidth: workspaceColumnLayout.implicitWidth
     readonly property real specialGridInnerWidth: Math.max(0, root.specialSectionWidth - root.specialStripPadding * 2)
@@ -155,7 +166,7 @@ Item {
     }
     readonly property real specialGridUsedWidth: root.effectiveSpecialColumns * root.specialWorkspaceTileWidth + Math.max(0, root.effectiveSpecialColumns - 1) * workspaceSpacing
     readonly property real specialGridOffsetX: root.specialStripPadding + Math.max(0, (root.specialGridInnerWidth - root.specialGridUsedWidth) / 2)
-    readonly property real specialStripTop: workspaceColumnLayout.implicitHeight + workspaceSpacing + root.specialStripGap
+    readonly property real specialStripTop: workspaceColumnLayout.implicitHeight + workspaceSpacing * 2 + root.specialStripGap
     readonly property real specialStripTilesTop: root.specialStripTop + root.specialStripPadding + root.specialStripTitleHeight + root.specialStripTitleGap
     readonly property real specialGridHeight: root.specialWorkspaceRows * root.specialWorkspaceTileHeight + Math.max(0, root.specialWorkspaceRows - 1) * workspaceSpacing
     readonly property real specialStripHeight: root.specialStripPadding * 2 + root.specialStripTitleHeight + root.specialStripTitleGap + root.specialGridHeight
@@ -346,6 +357,14 @@ Item {
     implicitWidth: overviewBackground.implicitWidth + Appearance.sizes.elevationMargin * 2
     implicitHeight: overviewBackground.implicitHeight + Appearance.sizes.elevationMargin * 2
 
+    Connections {
+        target: GlobalStates
+        function onOverviewOpenChanged() {
+            if (GlobalStates.overviewOpen)
+                root.wallpaperRevision++;
+        }
+    }
+
     property Component windowComponent: OverviewWindow {}
     property list<OverviewWindow> windowWidgets: []
 
@@ -362,8 +381,14 @@ Item {
         }
     }
 
-    StyledRectangularShadow {
-        target: overviewBackground
+    // The card, drawn like the launcher (LauncherApp/LauncherWindow.qml) and
+    // shared/ui/PanelSurface: shadow, 2px primary → on_primary gradient
+    // border, the blurred wallpaper under a tint.
+    RectangularShadow {
+        anchors.fill: overviewBackground
+        radius: overviewBackground.radius
+        blur: 15
+        color: ColorUtils.applyAlpha(Appearance.m3colors.m3shadow, 0.4)
     }
     Rectangle { // Background
         id: overviewBackground
@@ -373,21 +398,8 @@ Item {
 
         implicitWidth: contentLayout.implicitWidth + padding * 2
         implicitHeight: contentLayout.implicitHeight + padding * 2
-        radius: Appearance.rounding.screenRounding * root.scale + padding
-        clip: true
-        color: ColorUtils.applyAlpha(
-            root.glassMode
-                ? ColorUtils.mix(Appearance.colors.colLayer0, Appearance.colors.colLayer1, 0.78 - root.glassTintStrength * 0.35)
-                : Appearance.colors.colLayer0,
-            root.effectivePanelOpacity
-        )
-        border.width: 1
-        border.color: ColorUtils.applyAlpha(
-            root.glassMode
-                ? ColorUtils.mix(Appearance.colors.colLayer0Border, Appearance.m3colors.m3outline, 0.52)
-                : Appearance.colors.colLayer0Border,
-            root.glassMode ? root.glassBorderOpacity : root.effectivePanelOpacity
-        )
+        radius: root.cardRadius
+        color: "transparent"
 
         MouseArea {
             anchors.fill: parent
@@ -396,25 +408,55 @@ Item {
         }
 
         Rectangle {
-            visible: root.glassMode
+            id: cardFrame
             anchors.fill: parent
             radius: parent.radius
-            color: "transparent"
+            opacity: root.effectivePanelOpacity
             gradient: Gradient {
-                GradientStop { position: 0.0; color: ColorUtils.applyAlpha("#FFFFFF", root.glassShineOpacity * 0.35) }
-                GradientStop { position: 0.42; color: ColorUtils.applyAlpha("#FFFFFF", 0.0) }
-                GradientStop { position: 1.0; color: ColorUtils.applyAlpha("#000000", root.glassShineOpacity * 0.22) }
+                orientation: Gradient.Vertical
+                GradientStop { position: 0.0; color: Appearance.m3colors.m3primary }
+                GradientStop { position: 1.0; color: Appearance.m3colors.m3onPrimary }
             }
-        }
 
-        Rectangle {
-            visible: root.glassMode
-            anchors.fill: parent
-            anchors.margins: 1
-            radius: Math.max(parent.radius - 1, 0)
-            color: "transparent"
-            border.width: 1
-            border.color: ColorUtils.applyAlpha("#FFFFFF", root.glassBorderOpacity * 0.20)
+            Item {
+                anchors.fill: parent
+                anchors.margins: 2
+                layer.enabled: true
+                layer.effect: MultiEffect {
+                    maskEnabled: true
+                    maskSource: cardMask
+                    maskThresholdMin: 0.5
+                    maskSpreadAtMin: 1.0
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    color: Appearance.m3colors.m3background
+                }
+
+                Image {
+                    anchors.fill: parent
+                    source: root.blurredWallpaperSource
+                    sourceSize.height: height
+                    fillMode: Image.PreserveAspectCrop
+                    cache: false
+                    asynchronous: true
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    color: ColorUtils.applyAlpha(Appearance.m3colors.m3onSecondary, 0.7)
+                }
+            }
+
+            Rectangle {
+                id: cardMask
+                anchors.fill: parent
+                anchors.margins: 2
+                radius: parent.radius - anchors.margins
+                visible: false
+                layer.enabled: true
+            }
         }
 
         ColumnLayout { // Workspaces
@@ -444,24 +486,20 @@ Item {
                             property int colIndex: index
                             property int workspaceValue: root.getWorkspaceInCell(rowIndex, colIndex)
                             property bool showWallpaper: root.hasEmptyWorkspaceWallpaper
-                            property color defaultWorkspaceColor: Appearance.colors.colLayer1
-                            property color hoveredWorkspaceColor: ColorUtils.mix(defaultWorkspaceColor, Appearance.colors.colLayer1Hover, 0.1)
-                            property color hoveredBorderColor: Appearance.colors.colLayer2Hover
+                            property color defaultWorkspaceColor: Appearance.m3colors.m3surfaceContainer
+                            property color hoveredWorkspaceColor: Appearance.m3colors.m3surfaceContainerHigh
+                            property color hoveredBorderColor: Appearance.m3colors.m3primary
                             property bool hoveredWhileDragging: false
 
                             implicitWidth: root.workspaceImplicitWidth
                             implicitHeight: root.workspaceImplicitHeight
-                            color: showWallpaper ? "transparent" : ColorUtils.applyAlpha(
-                                root.glassMode
-                                    ? ColorUtils.mix(hoveredWhileDragging ? hoveredWorkspaceColor : defaultWorkspaceColor, Appearance.colors.colLayer0, 0.46)
-                                    : (hoveredWhileDragging ? hoveredWorkspaceColor : defaultWorkspaceColor),
-                                root.effectiveWorkspaceOpacity
-                            )
-                            radius: Appearance.rounding.screenRounding * root.scale
-                            border.width: 2
+                            // Filled by the CutoutFill below, so the number shows the card through it.
+                            color: "transparent"
+                            radius: root.tileRadius
+                            border.width: hoveredWhileDragging ? 2 : 1
                             border.color: hoveredWhileDragging
                                 ? ColorUtils.applyAlpha(hoveredBorderColor, root.glassMode ? root.glassBorderOpacity : 1)
-                                : "transparent"
+                                : Appearance.m3colors.m3outlineVariant
 
                             Image {
                                 id: workspaceWallpaper
@@ -531,18 +569,18 @@ Item {
                                 border.color: ColorUtils.applyAlpha("#FFFFFF", root.glassBorderOpacity * 0.16)
                             }
 
-                            StyledText {
-                                anchors.centerIn: parent
+                            CutoutFill {
                                 visible: !workspace.showWallpaper
-                                text: workspaceValue
-                                font {
-                                    pixelSize: root.workspaceNumberSize * root.scale
-                                    weight: Font.DemiBold
-                                    family: Appearance.font.family.expressive
-                                }
-                                color: ColorUtils.transparentize(Appearance.colors.colOnLayer1, 0.8)
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
+                                anchors.margins: workspace.border.width
+                                radius: workspace.radius - workspace.border.width
+                                color: ColorUtils.applyAlpha(
+                                    root.glassMode
+                                        ? ColorUtils.mix(workspace.hoveredWhileDragging ? workspace.hoveredWorkspaceColor : workspace.defaultWorkspaceColor, Appearance.colors.colLayer0, 0.46)
+                                        : (workspace.hoveredWhileDragging ? workspace.hoveredWorkspaceColor : workspace.defaultWorkspaceColor),
+                                    root.effectiveWorkspaceOpacity
+                                )
+                                text: workspace.workspaceValue
+                                pixelSize: root.workspaceNumberSize * root.scale
                             }
 
                             MouseArea {
@@ -593,38 +631,10 @@ Item {
                 implicitWidth: root.specialSectionWidth
                 implicitHeight: root.specialStripHeight
 
-                Rectangle {
+                // No frame or title: the special tiles sit straight on the card,
+                // set apart from the grid by specialStripGap.
+                Item {
                     anchors.fill: parent
-                    radius: Appearance.rounding.normal * root.scale
-                    color: ColorUtils.applyAlpha(
-                        root.glassMode
-                            ? ColorUtils.mix(Appearance.colors.colLayer0, Appearance.colors.colLayer1, 0.70)
-                            : Appearance.colors.colLayer1,
-                        root.glassMode ? Math.min(0.74, root.effectivePanelOpacity) : root.effectiveWorkspaceOpacity
-                    )
-                    border.width: 1
-                    border.color: ColorUtils.applyAlpha(Appearance.colors.colLayer2Border, root.glassMode ? root.glassBorderOpacity : 0.65)
-
-                    Rectangle {
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.top: parent.top
-                        height: Math.max(18 * root.scale, root.specialStripPadding + root.specialStripTitleHeight * 0.8)
-                        radius: parent.radius
-                        color: ColorUtils.applyAlpha(Appearance.colors.colSecondary, root.glassMode ? 0.12 : 0.08)
-                    }
-
-                    StyledText {
-                        anchors.left: parent.left
-                        anchors.top: parent.top
-                        anchors.leftMargin: root.specialStripPadding
-                        anchors.topMargin: root.specialStripPadding
-                        text: "Special Workspaces"
-                        font.family: Appearance.font.family.title
-                        font.pixelSize: root.specialStripTitleHeight
-                        font.weight: Font.DemiBold
-                        color: ColorUtils.applyAlpha(Appearance.colors.colOnLayer1, 0.84)
-                    }
 
                     Grid {
                         id: specialWorkspaceGrid
@@ -642,7 +652,7 @@ Item {
                                 required property string modelData
                                 property string specialName: modelData
                                 property var specialGeometry: root.specialWorkspaceGeometry(specialName, root.monitor?.id)
-                                property color baseColor: ColorUtils.mix(Appearance.colors.colLayer1, Appearance.colors.colLayer0, 0.52)
+                                property color baseColor: Appearance.m3colors.m3surfaceContainer
                                 property bool hasRenderableGeometry: Number.isFinite(specialGeometry?.width)
                                     && Number.isFinite(specialGeometry?.height)
                                     && specialGeometry.width > 0
@@ -657,16 +667,12 @@ Item {
                                 property real contentOffsetY: Math.max(0, (height - contentHeight) / 2)
                                 implicitWidth: root.specialWorkspaceTileWidth
                                 implicitHeight: root.specialWorkspaceTileHeight
-                                radius: Appearance.rounding.screenRounding * root.scale
+                                radius: root.tileRadius
                                 clip: true
-                                color: showWallpaper ? "transparent" : ColorUtils.applyAlpha(
-                                    root.glassMode
-                                        ? ColorUtils.mix(baseColor, Appearance.colors.colLayer0, 0.44)
-                                        : baseColor,
-                                    root.effectiveWorkspaceOpacity
-                                )
+                                // Filled by the CutoutFill below, so the "S" shows the card through it.
+                                color: "transparent"
                                 border.width: 1
-                                border.color: ColorUtils.applyAlpha(Appearance.colors.colLayer2Border, root.glassMode ? root.glassBorderOpacity : 0.75)
+                                border.color: Appearance.m3colors.m3outlineVariant
 
                                 Image {
                                     visible: specialWorkspaceTile.showWallpaper
@@ -689,6 +695,21 @@ Item {
                                             : specialWorkspaceTile.baseColor,
                                         root.emptyWorkspaceWallpaperOverlayOpacity
                                     )
+                                }
+
+                                // "S" where a normal workspace shows its number.
+                                CutoutFill {
+                                    visible: !specialWorkspaceTile.showWallpaper
+                                    anchors.margins: specialWorkspaceTile.border.width
+                                    radius: specialWorkspaceTile.radius - specialWorkspaceTile.border.width
+                                    color: ColorUtils.applyAlpha(
+                                        root.glassMode
+                                            ? ColorUtils.mix(specialWorkspaceTile.baseColor, Appearance.colors.colLayer0, 0.44)
+                                            : specialWorkspaceTile.baseColor,
+                                        root.effectiveWorkspaceOpacity
+                                    )
+                                    text: "S"
+                                    pixelSize: root.workspaceNumberSize * root.scale
                                 }
 
                                 MouseArea {
@@ -891,19 +912,14 @@ Item {
                         Rectangle {
                             id: createSpecialWorkspaceTile
                             property bool showWallpaper: root.hasSpecialEmptyWorkspaceWallpaper
+                            readonly property bool dropTarget: root.draggingTargetSpecialWorkspace === root.createSpecialWorkspaceTarget
                             implicitWidth: root.specialWorkspaceTileWidth
                             implicitHeight: root.specialWorkspaceTileHeight
-                            radius: Appearance.rounding.screenRounding * root.scale
-                            color: showWallpaper ? "transparent" : ColorUtils.applyAlpha(
-                                root.glassMode
-                                    ? ColorUtils.mix(Appearance.colors.colSecondaryContainer, Appearance.colors.colLayer1, 0.58)
-                                    : ColorUtils.mix(Appearance.colors.colLayer2, Appearance.colors.colLayer1, 0.55),
-                                root.draggingTargetSpecialWorkspace === root.createSpecialWorkspaceTarget ? 0.90 : root.effectiveWorkspaceOpacity
-                            )
-                            border.width: 1
-                            border.color: root.draggingTargetSpecialWorkspace === root.createSpecialWorkspaceTarget
-                                ? ColorUtils.applyAlpha(root.activeBorderColor, 0.96)
-                                : ColorUtils.applyAlpha(Appearance.colors.colSecondary, 0.46)
+                            radius: root.tileRadius
+                            // Filled by the CutoutFill below, so the "S" shows the card through it.
+                            color: "transparent"
+                            border.width: dropTarget ? 2 : 1
+                            border.color: dropTarget ? root.activeBorderColor : Appearance.m3colors.m3outlineVariant
 
                             Image {
                                 visible: createSpecialWorkspaceTile.showWallpaper
@@ -930,31 +946,19 @@ Item {
                                 )
                             }
 
-                            Rectangle {
-                                anchors.fill: parent
-                                anchors.margins: 1
-                                radius: Math.max(parent.radius - 1, 0)
-                                color: "transparent"
-                                border.width: 1
-                                border.color: ColorUtils.applyAlpha("#FFFFFF", root.glassMode ? 0.12 : 0.08)
-                            }
-
-                            Column {
-                                anchors.centerIn: parent
-                                spacing: 0
-
-                                StyledText {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    visible: !createSpecialWorkspaceTile.showWallpaper
-                                    text: root.draggingTargetSpecialWorkspace === root.createSpecialWorkspaceTarget ? "Release" : "+"
-                                    font.family: Appearance.font.family.expressive
-                                    font.pixelSize: root.draggingTargetSpecialWorkspace === root.createSpecialWorkspaceTarget
-                                        ? Appearance.font.pixelSize.larger * root.scale
-                                        : Appearance.font.pixelSize.huge * 1.25 * root.scale
-                                    font.weight: Font.DemiBold
-                                    color: ColorUtils.applyAlpha(Appearance.colors.colOnLayer1, 0.92)
-                                    horizontalAlignment: Text.AlignHCenter
-                                }
+                            // "S" like a normal workspace's number; "Release" while a window is dragged over it.
+                            CutoutFill {
+                                visible: !createSpecialWorkspaceTile.showWallpaper
+                                anchors.margins: createSpecialWorkspaceTile.border.width
+                                radius: createSpecialWorkspaceTile.radius - createSpecialWorkspaceTile.border.width
+                                color: ColorUtils.applyAlpha(
+                                    createSpecialWorkspaceTile.dropTarget ? Appearance.m3colors.m3surfaceContainerHigh : Appearance.m3colors.m3surfaceContainer,
+                                    root.effectiveWorkspaceOpacity
+                                )
+                                text: createSpecialWorkspaceTile.dropTarget ? "Release" : "S"
+                                pixelSize: createSpecialWorkspaceTile.dropTarget
+                                    ? Appearance.font.pixelSize.larger * root.scale
+                                    : root.workspaceNumberSize * root.scale
                             }
 
                             MouseArea {
@@ -1177,7 +1181,7 @@ Item {
                 width: root.workspaceImplicitWidth
                 height: root.workspaceImplicitHeight
                 color: "transparent"
-                radius: Appearance.rounding.screenRounding * root.scale
+                radius: root.tileRadius
                 border.width: 2
                 border.color: root.activeBorderColor
                 Behavior on x {

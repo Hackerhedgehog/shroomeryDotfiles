@@ -487,7 +487,7 @@ Out of scope (documented only, kept so it can be picked up):
 | `~/.cache/shroomery/frames/<md5 of path>.png` | `lib.sh video_frame` — an animated wallpaper's first frame | matugen, the blurred/square variants, `animated-wallpaper.sh` (still while paused) |
 | `~/.cache/shroomery/animated-wallpaper` | `animated-wallpaper.sh` — `OUTPUT<TAB>FILE<TAB>SECONDS` per mpvpaper that should play | `animated-wallpaper.sh`, `autostart.sh` |
 | `$XDG_RUNTIME_DIR/shroomery/mpvpaper/` | `animated-wallpaper.sh` — `OUTPUT.pid`, `OUTPUT.sock` (mpv IPC), `paused-OUTPUT.png` (still while paused), `lock` | `animated-wallpaper.sh`, `screen-colors.py` (video position) |
-| `~/.cache/shroomery/blurred_wallpaper.png` | `wallpaper.sh` | `hypr/hyprlock.conf`, wlogout themes, quickshell LauncherApp (backdrop) |
+| `~/.cache/shroomery/blurred_wallpaper.png` | `wallpaper.sh` | `hypr/hyprlock.conf`, wlogout themes, quickshell LauncherApp and OverviewApp (backdrop) |
 | `~/.cache/shroomery/square_wallpaper.png` | `wallpaper.sh` | `hypr/hyprlock.conf` |
 | `~/.cache/shroomery/<effect>-<image>` | `wallpaper.sh` (effect copies) | `awww`, matugen |
 | `~/.cache/shroomery/weather.json` | quickshell DashboardPanel — last wttr.in answer, refetched after 30 min | DashboardPanel |

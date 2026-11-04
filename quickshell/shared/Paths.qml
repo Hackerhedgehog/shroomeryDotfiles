@@ -79,7 +79,7 @@ Singleton {
     readonly property string stillWallpaper: home + "/.cache/shroomery/still_wallpaper"
     // The wallpaper's candidate accent colors, one #rrggbb per line (wallpaper.sh).
     readonly property string wallpaperColors: home + "/.cache/shroomery/wallpaper-colors"
-    // Blurred copy of the wallpaper, also written by wallpaper.sh (LauncherApp backdrop).
+    // Blurred copy of the wallpaper, also written by wallpaper.sh (LauncherApp and OverviewApp backdrop).
     readonly property string blurredWallpaper: home + "/.cache/shroomery/blurred_wallpaper.png"
     // Written by shroomery/scripts/wallpaper-thumbnails.sh.
     readonly property string wallpaperThumbnails: home + "/.cache/shroomery/thumbnails"
