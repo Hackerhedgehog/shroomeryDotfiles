@@ -27,7 +27,9 @@ QtObject {
                     "right": ["battery", "volume", "notifications", "bluetooth", "network", "settings", "power"] },
         "border": { "width": 2, "colorTop": "", "colorBottom": "" },
         "opacity":{ "collapsed": 0.6, "expanded": 0.8 },
-        "clock":  { "format": "HH:mm", "dateFormat": "ddd, dd MMM" },
+        // format: time everywhere (bar, dashboard, notifications; set in the
+        // TimeApp), dateFormat: the bar's date, longDateFormat: the dashboard's.
+        "clock":  { "format": "HH:mm", "dateFormat": "ddd, dd MMM", "longDateFormat": "dddd, d MMMM yyyy" },
         "taskbar":{ "enabled": true, "iconSize": 22, "pinned": [] }
     })
 

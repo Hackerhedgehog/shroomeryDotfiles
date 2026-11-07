@@ -385,6 +385,9 @@ Singleton {
                 return;
             }
             root.errorMessage = "";
+            // A new scale changes the per-monitor mouse speed (InputApp); Hyprland
+            // sends no event for it.
+            Quickshell.execDetached([Paths.inputScript, "speed"]);
             if (root._afterApply === "writeConfig")
                 root.liveAheadOfConfig = true;
             else

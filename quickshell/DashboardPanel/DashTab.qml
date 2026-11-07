@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import qs.shared
 import qs.shared.ui
 import qs.DashboardPanel
+import qs.StatusbarApp
 
 // The overview tab: a 3 × 2 grid of equal columns. Top row: output / input
 // volume bubbles, the clock, CPU/RAM/disk rings. Bottom row: the weather,
@@ -80,7 +81,8 @@ TabPage {
                 spacing: 0
                 Text {
                     Layout.alignment: Qt.AlignHCenter
-                    text: Qt.formatDateTime(clock.date, "HH:mm")
+                    // The TimeApp's clock format, without seconds (this clock ticks per minute).
+                    text: Qt.formatDateTime(clock.date, StatusbarState.settings.clock.format.replace(/[:.]ss?/g, ""))
                     color: Theme.primary
                     font.family: Theme.fontFamily
                     font.pixelSize: 52
@@ -88,7 +90,7 @@ TabPage {
                 }
                 Label {
                     Layout.alignment: Qt.AlignHCenter
-                    text: Qt.formatDateTime(clock.date, "dddd, d MMMM yyyy")
+                    text: Qt.formatDateTime(clock.date, StatusbarState.settings.clock.longDateFormat)
                     font.pixelSize: 13
                 }
             }

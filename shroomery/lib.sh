@@ -358,3 +358,140 @@ night_light_action() {
         echo "$wanted"
     fi
 }
+
+# --- input (scripts/input.sh, listeners/input-speed.sh) ---
+# Settings JSON written by the quickshell InputApp (Paths.inputSettings).
+INPUT_SETTINGS="$SHROOMERY_SETTINGS/input.json"
+# The Hyprland file input.sh writes its managed block into (Paths.hyprInput).
+HYPR_INPUT_FILE="$HOME/.config/hypr/input.lua"
+# The mouse speed in input.json is the speed on a screen this many logical
+# pixels high (a 1080p monitor at scale 1).
+INPUT_REFERENCE_HEIGHT=1080
+# The speed actually set is kept in this range.
+INPUT_SPEED_MIN=0.05
+INPUT_SPEED_MAX=10
+
+# VALUE (a decimal number) clamped to MIN..MAX with 3 decimals; DEFAULT when
+# it isn't a number.
+clamp_decimal() {
+    if ! [[ "$1" =~ ^-?[0-9]+(\.[0-9]+)?$ ]]; then
+        echo "$4"
+        return
+    fi
+    LC_ALL=C awk -v v="$1" -v lo="$2" -v hi="$3" \
+        'BEGIN { if (v < lo) v = lo; if (v > hi) v = hi; printf "%.3f\n", v }'
+}
+
+# A validated input.json value (layout, variant, speed, scaleWithMonitor);
+# missing file, bad JSON or bad values give the default. Same rules as
+# quickshell InputApp/InputLogic.js normalize().
+input_setting() {
+    local raw
+    raw=$(jq -r --arg k "$1" '.[$k] // empty | tostring' "$INPUT_SETTINGS" 2>/dev/null)
+    case $1 in
+        layout)
+            if [[ "$raw" =~ ^[A-Za-z0-9_-]+$ ]]; then echo "$raw"; else echo us; fi ;;
+        variant)
+            if [[ "$raw" =~ ^[A-Za-z0-9_-]+$ ]]; then echo "$raw"; else echo ""; fi ;;
+        speed) clamp_decimal "$raw" 0.05 4 1.000 ;;
+        scaleWithMonitor)
+            if [ "$raw" = true ]; then echo true; else echo false; fi ;;
+    esac
+}
+
+# How much faster the cursor has to move on a monitor so it crosses it as
+# fast as a 1080p screen at scale 1: its logical height / 1080. Monitors
+# rotated by 90° or 270° (TRANSFORM 1, 3, 5, 7) use their width.
+# monitor_speed_factor WIDTH HEIGHT SCALE TRANSFORM → "1.333"; 1.000 on bad input.
+monitor_speed_factor() {
+    local w=$1 h=$2 scale=$3 transform=${4:-0}
+    if ! [[ "$w" =~ ^[0-9]+$ && "$h" =~ ^[0-9]+$ && "$scale" =~ ^[0-9]+(\.[0-9]+)?$ ]] \
+        || (( w == 0 || h == 0 )); then
+        echo 1.000
+        return
+    fi
+    (( transform % 2 == 1 )) && h=$w
+    LC_ALL=C awk -v h="$h" -v s="$scale" -v ref="$INPUT_REFERENCE_HEIGHT" \
+        'BEGIN { if (s <= 0) s = 1; printf "%.3f\n", h / s / ref }'
+}
+
+# The speed to set: BASE × FACTOR, clamped to INPUT_SPEED_MIN..MAX.
+effective_speed() {
+    local product
+    product=$(LC_ALL=C awk -v b="$1" -v f="$2" 'BEGIN { printf "%.4f\n", b * f }')
+    clamp_decimal "$product" "$INPUT_SPEED_MIN" "$INPUT_SPEED_MAX" 1.000
+}
+
+# Hyprland's accel_profile for a flat (no acceleration) speed: libinput's
+# custom curve through (0, 0) and (1, SPEED) moves the cursor SPEED× the
+# mouse's motion at any hand speed.
+flat_accel_profile() {
+    echo "custom 1 0 $1"
+}
+
+# --- date, time and locale (scripts/time.sh, listeners/auto-timezone.sh) ---
+# Settings JSON written by the quickshell TimeApp (Paths.timeSettings).
+TIME_SETTINGS="$SHROOMERY_SETTINGS/time.json"
+# The polkit rule time.sh allow-timezone installs (readable by root only).
+TIMEZONE_POLKIT_RULE="/etc/polkit-1/rules.d/49-shroomery-timezone.rules"
+# Locale variables localectl set-locale accepts.
+LOCALE_VARS=(LANG LANGUAGE LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES
+    LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT LC_IDENTIFICATION)
+
+# Status bar settings (quickshell StatusbarState, Paths.statusbarSettings); its
+# "clock" group is the clock format the TimeApp sets.
+STATUSBAR_SETTINGS="$SHROOMERY_SETTINGS/statusbar.json"
+
+# Exit 0 when the shell's clock is 24-hour: statusbar.json clock.format (a Qt
+# pattern, default HH:mm) has no AP/ap outside 'quoted' text. Same rule as
+# quickshell TimeApp/TimeLogic.js parseTimeFormat. Unreadable file → 24-hour.
+clock_is_24h() {
+    local fmt
+    fmt=$(jq -r '.clock.format // "HH:mm"' "$STATUSBAR_SETTINGS" 2>/dev/null) || fmt="HH:mm"
+    fmt=$(sed "s/'[^']*'//g" <<<"$fmt")
+    [[ "${fmt,,}" != *a* ]]
+}
+
+# A validated time.json value (autoTimezone); missing file or bad values → default.
+time_setting() {
+    local raw
+    raw=$(jq -r --arg k "$1" '.[$k] // empty | tostring' "$TIME_SETTINGS" 2>/dev/null)
+    case $1 in
+        autoTimezone)
+            if [ "$raw" = true ]; then echo true; else echo false; fi ;;
+    esac
+}
+
+# Exit 0 when TEXT is "YYYY-MM-DD HH:MM" or "YYYY-MM-DD HH:MM:SS" with a real
+# date and time (for timedatectl set-time).
+valid_datetime() {
+    [[ "$1" =~ ^([0-9]{4})-([0-9]{2})-([0-9]{2})\ ([01][0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$ ]] || return 1
+    date -d "${BASH_REMATCH[1]}-${BASH_REMATCH[2]}-${BASH_REMATCH[3]}" +%F 2>/dev/null \
+        | grep -qx "${BASH_REMATCH[1]}-${BASH_REMATCH[2]}-${BASH_REMATCH[3]}"
+}
+
+# Exit 0 when ARG is VAR=VALUE with VAR one of LOCALE_VARS and VALUE a locale
+# name (en_US.UTF-8, sr_RS@latin, C.UTF-8); an empty VALUE is not accepted.
+valid_locale_assignment() {
+    local var=${1%%=*} value=${1#*=} v
+    [[ "$1" == *=* && "$value" =~ ^[A-Za-z0-9_.@:-]+$ ]] || return 1
+    for v in "${LOCALE_VARS[@]}"; do
+        [ "$v" = "$var" ] && return 0
+    done
+    return 1
+}
+
+# A locale name as `locale -a` prints it: en_US.UTF-8 → en_US.utf8.
+normalize_locale_name() {
+    local name=$1 base codeset mod=""
+    if [[ "$name" == *@* ]]; then mod="@${name#*@}"; name=${name%%@*}; fi
+    if [[ "$name" == *.* ]]; then
+        base=${name%%.*}
+        codeset=${name#*.}
+        codeset=${codeset,,}
+        codeset=${codeset//-/}
+        echo "$base.$codeset$mod"
+    else
+        echo "$name$mod"
+    fi
+}

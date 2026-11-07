@@ -38,7 +38,8 @@
     },
     "clock": {
         "format": "HH:mm",
-        "dateFormat": "ddd, dd MMM"
+        "dateFormat": "ddd, dd MMM",
+        "longDateFormat": "dddd, d MMMM yyyy"
     },
     "taskbar": {
         "enabled": true,

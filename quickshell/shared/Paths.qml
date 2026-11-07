@@ -47,6 +47,10 @@ Singleton {
     readonly property string visualizerSettings: settings + "/visualizer.json"
     // Night light: mode (off/fixed/sun), on/off times, temperature, gamma (NightLightLogic.DEFAULTS).
     readonly property string nightLightSettings: settings + "/night-light.json"
+    // Keyboard layout + mouse speed (InputApp/InputLogic.js DEFAULTS), applied by inputScript.
+    readonly property string inputSettings: settings + "/input.json"
+    // Automatic timezone on/off (TimeApp), read by listeners/auto-timezone.sh.
+    readonly property string timeSettings: settings + "/time.json"
     // Safe system update (shroomery/lib.sh has the same names): versions per package that
     // `paccache` keeps (an integer 1-20, default 3) and the protected package patterns, one per line.
     readonly property string cacheKeepFile: settings + "/cache-keep"
@@ -70,6 +74,9 @@ Singleton {
     readonly property string lidSwitch: scripts + "/lid-switch.sh"
     readonly property string conservationMode: scripts + "/conservation-mode.sh"
     readonly property string hyprsunset: scripts + "/hyprsunset.sh"
+    // Keyboard layout and mouse speed (InputApp); date, time, timezone and locale (TimeApp).
+    readonly property string inputScript: scripts + "/input.sh"
+    readonly property string timeScript: scripts + "/time.sh"
     // Screen color sampler daemon (shroomery/screencolors/README.md).
     readonly property string screenColors: scripts + "/screen-colors.py"
 

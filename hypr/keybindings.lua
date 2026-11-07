@@ -15,6 +15,8 @@ hl.bind(mainMod .. " + K", hl.dsp.exec_cmd("~/.config/quickshell/KeybindsApp/tog
 hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("~/.config/quickshell/AudioPanel/toggle.sh"), { description = "Open the AudioPanel" })
 hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("~/.config/quickshell/WallpaperApp/toggle.sh"), { description = "Open the WallpaperApp" })
 hl.bind(mainMod .. " + U", hl.dsp.exec_cmd("~/.config/shroomery/scripts/install-updates.sh"), { description = "Settings → Update" })
+hl.bind(mainMod .. " + I", hl.dsp.exec_cmd("~/.config/quickshell/InputApp/toggle.sh"), { description = "Open the InputApp (keyboard layout, mouse speed)" })
+hl.bind(mainMod .. " + T", hl.dsp.exec_cmd("~/.config/quickshell/TimeApp/toggle.sh"), { description = "Open the TimeApp (date, time, timezone, language)" })
 
 -- fr keyboard layout setup
 local is_fr = false

@@ -31,12 +31,14 @@ shroomery layout:
 - `notify.sh` — `notify_user` helper sourced by hypr scripts
 - `scripts/` — `wallpaper.sh`, `animated-wallpaper.sh` (mpvpaper: videos/GIFs, paused on battery/gamemode), `wallpaper-thumbnails.sh`, `apply-theme.sh`, `toggle-theme.sh`, `power.sh`,
   `check-updates.sh`, `install-updates.sh` (opens Settings → Update), `autostart.sh`,
-  `terminal.sh`, `editor.sh`, `clear-wallpaper-cache.sh`, `ocr.sh`, `lid-switch.sh`, `screen-colors.py`
+  `terminal.sh`, `editor.sh`, `clear-wallpaper-cache.sh`, `ocr.sh`, `lid-switch.sh`, `screen-colors.py`,
+  `input.sh` (keyboard layout + flat mouse speed, writes the `shroomery_input` block in `~/.config/hypr/input.lua`), `time.sh` (timedatectl/localectl/locale-gen), `lock-clock.sh` (hyprlock clock, 24/12 h from `statusbar.json`)
 - `screencolors/` — the screen color sampler package (`screen-colors.py`), with its own README (protocol, LED notes)
 - `effects/` — wallpaper effects (ImageMagick snippets) applied by `wallpaper.sh`
-- `listeners/` + `listeners.sh` — background watchers (GTK dark/light → re-theme, low battery, AC plug → pause/resume animated wallpaper, night light schedule)
+- `listeners/` + `listeners.sh` — background watchers (GTK dark/light → re-theme, low battery, AC plug → pause/resume animated wallpaper, night light schedule,
+  mouse speed per monitor on Hyprland `focusedmon`, automatic timezone on network connect)
 - `settings/` — user state: `statusbar.json`, `dock.json`, `wallpaper-*`, `accent`, `accent-index`, `accent-scheme`, `weather-location`,
-  `terminal`, `editor`, `launcher`, `launcher-view.json`, `ocr-language`, `visualizer.json`, `night-light.json`, flag files (`gamemode-enabled`, `hide-fastfetch`)
+  `terminal`, `editor`, `launcher`, `launcher-view.json`, `ocr-language`, `visualizer.json`, `night-light.json`, `input.json`, `time.json`, flag files (`gamemode-enabled`, `hide-fastfetch`)
 - `colors/colors.json` — matugen output, read by `quickshell/shared/Theme.qml`
 - Cache: `~/.cache/shroomery/` (current wallpaper, blurred/square variants for hyprlock/wlogout/LauncherApp)
 
@@ -80,7 +82,7 @@ Design specs and plans live in `quickshell/docs/superpowers/`.
     panels; `StatusbarApp/BarShape` draws pill + panel as one outline (`BarGeometry.js`).
   - `CenterPanel` — a `SlidePanel` for an app window in the middle of the screen (drops in from the top like
     the launcher), on a `PanelSurface`. Set `cardWidth`/`cardHeight`; children go on the card, with
-    `anchors.margins: 20`. Used by MonitorApp, WallpaperApp, OcrApp and KeybindsApp.
+    `anchors.margins: 20`. Used by MonitorApp, WallpaperApp, OcrApp, KeybindsApp, InputApp (Super+I) and TimeApp (Super+T).
   - `PanelSurface` — shadow + gradient-border card; put a `ColumnLayout { anchors.fill: parent; anchors.margins: 18 }` in it.
   - The look follows DashboardPanel: content sits in `Card`s (rounded surface_container tiles), controls are
     pills with tonal fills rather than outlines, no divider lines. `AppHeader` (glyph badge + title +
@@ -91,7 +93,10 @@ Design specs and plans live in `quickshell/docs/superpowers/`.
     (`iconSrc` or `iconTxt`), `ColoredIcon`, `ToggleSwitch`, `FieldCombo` (use `boundIndex` when the
     selection comes from state), `PanelMenu` + `MenuEntry`, `AppButton` (dock/taskbar app icon),
     `InlineMenu` (context menu drawn inside the caller's window), `WindowList` (an app's windows by title:
-    click focuses, middle click closes).
+    click focuses, middle click closes), `PickerList` (SearchField + list of `{ key, label, detail }`, `currentKey`, `picked(key)`;
+    search in `PickerLogic.js`).
+  - Qt 6.10's QtQuick.Controls has its own `SearchField`: a `shared/ui` file that uses ours and imports
+    Controls must import it `as QQC` (sibling types lose to explicit imports).
   - `AccentState.qml` (singleton) — accent palette state/actions (QuickSettingsPanel and SettingsApp); its picker is `shared/ui/AccentPicker.qml`.
   - `AppList.qml` (singleton) — desktop-entry lookup and "pinned + running apps" list for DockApp and the taskbar.
 - `VisualizerApp/` — visualizer mode (`VisualizerState` singleton, IPC `visualizer`, Super+Alt+V); colors come from the shroomery
@@ -135,8 +140,8 @@ Run the commands below from `~/.config/quickshell`.
   A file that is only loaded later (inside a `LazyLoader`, a popout panel) may not trigger the reload when saved:
   `touch shell.qml` forces one. `console.log` lines show with `qs log -r "*.debug=true"`.
 - `qs ipc show` lists targets; open/close panels with the app's `toggle.sh` to exercise them.
-- Pure JS unit tests: `node --test shared/ui/tests/ shared/tests/ VisualizerApp/tests/ StatusbarApp/tests/ DashboardPanel/tests/ AudioPanel/tests/ LauncherApp/tests/ KeybindsApp/tests/ BatteryPanel/tests/ SettingsApp/tests/`.
-- Shroomery bash helpers: `bash ~/.config/shroomery/tests/night-light.sh`, `bash ~/.config/shroomery/tests/pkg-update.sh`, `bash ~/.config/shroomery/tests/recovery.sh`.
+- Pure JS unit tests: `node --test shared/ui/tests/ shared/tests/ VisualizerApp/tests/ StatusbarApp/tests/ DashboardPanel/tests/ AudioPanel/tests/ LauncherApp/tests/ KeybindsApp/tests/ BatteryPanel/tests/ SettingsApp/tests/ InputApp/tests/ TimeApp/tests/`.
+- Shroomery bash helpers: `bash ~/.config/shroomery/tests/night-light.sh`, `bash ~/.config/shroomery/tests/input.sh`, `bash ~/.config/shroomery/tests/time.sh`, `bash ~/.config/shroomery/tests/pkg-update.sh`, `bash ~/.config/shroomery/tests/recovery.sh`.
   Run them capped, in the foreground: `systemd-run --user --scope -p TasksMax=1000 -q bash <test>` (a runaway
   test once used up the terminal's process limit and crashed Claude Code). Not under `nohup` or `&`: the
   ignored SIGHUP/SIGINT they pass on makes the signal tests fail falsely. A PATH stub calls the real binary by

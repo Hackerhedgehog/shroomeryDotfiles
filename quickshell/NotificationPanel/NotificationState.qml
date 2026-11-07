@@ -7,6 +7,7 @@ import QtQuick
 import qs.shared
 import qs.shared.ui
 import qs.VisualizerApp
+import qs.StatusbarApp
 
 // The notification daemon (org.freedesktop.Notifications) and its history.
 // Only one daemon can own that D-Bus name: while swaync (or any other
@@ -122,7 +123,7 @@ Singleton {
             return mins + "m";
         if (mins < 24 * 60)
             return Math.floor(mins / 60) + "h";
-        return Qt.formatDateTime(time, "ddd HH:mm");
+        return Qt.formatDateTime(time, "ddd " + StatusbarState.settings.clock.format.replace(/[:.]ss?/g, ""));
     }
 
     // Icon source for a notification: its image, else its app icon (name or

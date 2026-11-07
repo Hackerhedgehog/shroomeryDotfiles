@@ -20,6 +20,8 @@ import "SettingsApp"
 import "NotificationPanel"
 import "BatteryPanel"
 import "VisualizerApp"
+import "InputApp"
+import "TimeApp"
 import qs.shared
 
 ShellRoot {
@@ -53,6 +55,8 @@ ShellRoot {
     KeybindsWindow {}
     LauncherWindow {}
     OcrWindow {}
+    InputWindow {}
+    TimeWindow {}
     SettingsWindow {}
     NotificationPopups {}
     // The visualizer overlay; exists only while visualizer mode is on.
