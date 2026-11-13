@@ -42,6 +42,8 @@ for i = 1, 10 do
     end
     hl.bind(mainMod .. " + " .. key,             hl.dsp.focus({ workspace = i}), { description = "Focus workspace " .. i })
     hl.bind(mainMod .. " + SHIFT + " .. key,     hl.dsp.window.move({ workspace = i }), { description = "Move window to workspace " .. i })
+    -- Bring workspace i to the focused monitor (swaps with the other monitor if it is shown there).
+    hl.bind(mainMod .. " + SHIFT + F" .. i,      hl.dsp.focus({ workspace = i, on_current_monitor = true }), { description = "Bring workspace " .. i .. " to the active monitor" })
 end
 
 -- Windows killactive
