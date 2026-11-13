@@ -22,6 +22,7 @@ import "BatteryPanel"
 import "VisualizerApp"
 import "InputApp"
 import "TimeApp"
+import "PolkitApp"
 import qs.shared
 
 ShellRoot {
@@ -63,6 +64,8 @@ ShellRoot {
     VisualizerWindow {}
     // Visualizer setup (Super+Alt+V); its Start runs VisualizerWindow.
     VisualizerPanel {}
+    // The polkit agent (password prompts), above every other panel.
+    PolkitWindow {}
 
     Component { id: notificationsPanel; NotificationPanel {} }
     Component { id: windowsPanel; TaskbarWindowsPanel {} }

@@ -48,10 +48,10 @@ Other places the system touches (none are in the repo):
 ```
 
 **Startup.** Hyprland fires `hyprland.start` → `hypr/autostart.lua` starts the
-portals, the polkit agent and hypridle, then runs
+portals and hypridle, then runs
 `shroomery/listeners.sh --startall` (background watchers) and
 `shroomery/scripts/autostart.sh`. That script starts `qs` (the Quickshell
-shell) plus the separate OverviewApp instance, and restores the last wallpaper
+shell, which is also the polkit agent: `quickshell/PolkitApp`) plus the separate OverviewApp instance, and restores the last wallpaper
 and its theme.
 
 **Keybinds → UI.** `hypr/keybindings.lua` binds keys either to Hyprland

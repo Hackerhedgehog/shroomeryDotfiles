@@ -82,7 +82,8 @@ Design specs and plans live in `quickshell/docs/superpowers/`.
     panels; `StatusbarApp/BarShape` draws pill + panel as one outline (`BarGeometry.js`).
   - `CenterPanel` — a `SlidePanel` for an app window in the middle of the screen (drops in from the top like
     the launcher), on a `PanelSurface`. Set `cardWidth`/`cardHeight`; children go on the card, with
-    `anchors.margins: 20`. Used by MonitorApp, WallpaperApp, OcrApp, KeybindsApp, InputApp (Super+I) and TimeApp (Super+T).
+    `anchors.margins: 20`. Used by MonitorApp, WallpaperApp, OcrApp, KeybindsApp, InputApp (Super+I), TimeApp (Super+T) and PolkitApp
+    (the session's polkit agent / password prompt, opened by polkit itself; `shared/PolkitState.qml` adds its window to every SlidePanel's focus grab).
   - `PanelSurface` — shadow + gradient-border card; put a `ColumnLayout { anchors.fill: parent; anchors.margins: 18 }` in it.
   - The look follows DashboardPanel: content sits in `Card`s (rounded surface_container tiles), controls are
     pills with tonal fills rather than outlines, no divider lines. `AppHeader` (glyph badge + title +

@@ -20,8 +20,8 @@ hl.on("hyprland.start", function()
 	-- Start waybar
 	--hl.exec_cmd(HOME .. "/.config/waybar/launch.sh")
 
-	-- Start polkit daemon
-	hl.exec_cmd("/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1")
+	-- No separate polkit agent: quickshell is it (quickshell/PolkitApp), so password
+	-- prompts open above the shell's panels. Only one agent can run per session.
 
 	-- Quickshell + wallpaper/theme restore
 	hl.exec_cmd("mkdir -p ~/.cache/shroomery && ~/.config/shroomery/scripts/autostart.sh > ~/.cache/shroomery/autostart.log 2>&1")

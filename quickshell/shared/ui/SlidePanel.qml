@@ -3,6 +3,7 @@ import Quickshell.Wayland
 import Quickshell.Hyprland
 import Quickshell.Io
 import QtQuick
+import qs.shared
 
 // The window frame shared by every slide-in panel: an overlay layer that
 // slides in from the left, right or top edge of the focused monitor, closes on
@@ -129,7 +130,8 @@ PanelWindow {
     }
 
     HyprlandFocusGrab {
-        windows: [panel]
+        // The polkit prompt sits on top of every panel; clicks on it aren't "outside".
+        windows: PolkitState.window && PolkitState.window !== panel ? [panel, PolkitState.window] : [panel]
         active: panel.isOpen && panel.focusGrabEnabled
         onCleared: {
             if (panel.isOpen && panel.focusGrabEnabled)
