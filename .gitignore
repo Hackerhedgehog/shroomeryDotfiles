@@ -2,3 +2,15 @@
 quickshell/WallpaperApp/wallpapers/
 quickshell/.superpowers/
 quickshell/docs/superpowers/
+
+# python bytecode (holds absolute paths of the machine that compiled it)
+__pycache__/
+*.pyc
+
+# hypr: per-machine extras loaded by hyprland.lua when present (the installer
+# writes NVIDIA environment variables here)
+hypr/custom.lua
+
+
+# runtime flag (gamemode on/off on this machine), not a default to share
+shroomery/settings/gamemode-enabled

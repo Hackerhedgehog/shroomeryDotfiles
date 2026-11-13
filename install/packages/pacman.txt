@@ -1,0 +1,103 @@
+# Official repository packages (pacman). One per line, # starts a comment.
+# install/steps/20-packages.sh installs every one that is missing.
+
+# --- build tools (the AUR helper is built with these) ---
+base-devel
+git
+
+# --- compositor ---
+hyprland
+hypridle
+hyprlock
+hyprpicker
+hyprsunset
+hyprshutdown
+xdg-desktop-portal-hyprland
+xdg-desktop-portal-gtk
+xdg-utils
+xdg-user-dirs
+qt5-wayland
+qt6-wayland
+polkit                  # quickshell/PolkitApp is the agent; don't add another one
+
+# --- the shell (quickshell) ---
+quickshell
+qt6-svg
+qt6-imageformats
+qt6-multimedia
+qt6-5compat
+
+# --- wallpaper + theme ---
+awww
+matugen
+imagemagick
+ffmpeg
+mpv
+
+# --- audio (AudioPanel, dashboard spectrum, media keys) ---
+pipewire
+pipewire-pulse
+pipewire-alsa
+wireplumber
+libpulse                # pactl
+lsp-plugins-lv2         # "dynamic loudness" chain
+cava
+playerctl
+
+# --- bluetooth / network / power ---
+bluez
+bluez-utils
+networkmanager
+nm-connection-editor
+iw                      # Wi-Fi link details in the NetworkPanel
+power-profiles-daemon
+upower
+brightnessctl
+
+# --- screenshots, clipboard, OCR ---
+grim
+slurp
+wl-clipboard
+wl-clip-persist
+cliphist
+tesseract
+tesseract-data-eng
+
+# --- tools the scripts call ---
+jq
+curl
+inotify-tools
+pacman-contrib          # checkupdates, paccache (Settings -> Update)
+fakeroot
+python
+python-numpy            # screen-colors sampler (visualizer)
+lua
+gum
+figlet
+fzf
+fastfetch
+libnotify               # notify-send
+xorg-xrandr
+xkeyboard-config        # keyboard layout list (InputApp)
+pciutils                # lspci (GPU detection in the installer)
+psmisc                  # killall
+glib2                   # gsettings
+
+# --- default apps (keybinds: Super+Q kitty, Super+W firefox, Super+F dolphin) ---
+kitty
+firefox
+dolphin
+gnome-text-editor
+btop
+nwg-look
+qt6ct
+qt5ct
+
+# --- fonts + themes ---
+ttf-firacode-nerd       # Theme.iconFontFamily
+ttf-jetbrains-mono-nerd # kitty
+ttf-fira-sans           # Theme.fontFamily, hyprlock
+noto-fonts
+noto-fonts-emoji        # emoji picker
+gnome-themes-extra      # Adwaita-dark for GTK 3
+papirus-icon-theme

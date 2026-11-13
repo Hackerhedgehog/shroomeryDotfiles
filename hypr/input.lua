@@ -30,7 +30,7 @@ hl.config({
     input = {
         kb_layout     = "ee",
         kb_variant    = "",
-        accel_profile = "custom 1 0 0.750",
+        accel_profile = "custom 1 0 0.563",
     },
 })
 -- END shroomery_input

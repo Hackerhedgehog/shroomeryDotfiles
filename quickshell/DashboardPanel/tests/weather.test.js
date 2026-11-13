@@ -5,7 +5,7 @@ const W = require("../WeatherData.js");
 const J1 = {
   current_condition: [{ temp_C: "12", FeelsLikeC: "10", humidity: "81", windspeedKmph: "14",
     winddir16Point: "SW", weatherCode: "116", weatherDesc: [{ value: "Partly cloudy " }] }],
-  nearest_area: [{ areaName: [{ value: "Tallinn" }], country: [{ value: "Estonia" }] }],
+  nearest_area: [{ areaName: [{ value: "Oslo" }], country: [{ value: "Norway" }] }],
   weather: [
     { date: "2026-10-11", maxtempC: "14", mintempC: "6",
       astronomy: [{ sunrise: "07:45 AM", sunset: "06:22 PM" }],
@@ -24,7 +24,7 @@ test("url encodes the location and leaves it empty for auto", () => {
 
 test("normalize flattens wttr.in j1", () => {
   const w = W.normalize(J1);
-  assert.strictEqual(w.location, "Tallinn, Estonia");
+  assert.strictEqual(w.location, "Oslo, Norway");
   assert.strictEqual(w.tempC, 12);
   assert.strictEqual(w.feelsC, 10);
   assert.strictEqual(w.desc, "Partly cloudy");

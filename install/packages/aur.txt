@@ -1,0 +1,6 @@
+# AUR packages, built with yay (or paru when that is installed). If neither is
+# there, install/steps/20-packages.sh builds yay-bin first.
+
+mpvpaper                  # animated wallpapers
+grimblast-git             # area screenshots (hypr/scripts/screenshot.sh)
+bibata-cursor-theme-bin   # Bibata-Modern-Ice cursor (hypr/autostart.lua)

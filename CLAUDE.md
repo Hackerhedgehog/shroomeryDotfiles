@@ -12,11 +12,17 @@ its own README with the details: `quickshell/README.md`, `shroomery/README.md`
 
 - Do not do anything with git (commit, branch, stash, add, mv, …) unless the
   user explicitly asks. Use plain `mv`/`cp`/`rm` for file moves.
-- This repo lives at `~/shroomeryDotfiles`; `~/.config/{hypr,quickshell,shroomery}` are symlinks
-  into it. Always use the `~/.config/...` paths in code and docs, never the resolved target.
+- This repo lives at `~/shroomeryDotfiles`; `~/.config/{hypr,quickshell,shroomery,matugen}` are symlinks
+  into it (made by `install.sh`, which also works from another clone location). Always use the `~/.config/...` paths in code and docs, never the resolved target.
   Nothing here may depend on `~/.mydotfiles` or `~/.config/ml4w` (both are meant to be deletable).
 - `quickshell/README.md` lists every dependency (files read/written, programs run). Keep it in sync when
   adding a path to `quickshell/shared/Paths.qml` or a new external command.
+- A new external command (or QML/Python module) also needs its package in `install/packages/pacman.txt`
+  (or `aur.txt`), so `install.sh` installs it on a fresh system. `bash install/tests/deps.sh` checks this;
+  a word it flags that isn't a real dependency (or is optional) goes in `install/tests/deps-ignore.txt` with the reason. Machine-specific state that the installer resets on a
+  fresh install (monitors, keyboard layout, …) is handled in `install/steps/50-config.sh`.
+- The repo is shared: no personal data in tracked files (home paths, names, emails, locations, hostnames).
+  Test fixtures use neutral values (`/home/user`, …); Python bytecode is git-ignored.
 
 ## Where things live
 
@@ -25,6 +31,8 @@ its own README with the details: `quickshell/README.md`, `shroomery/README.md`
 | `~/.config/quickshell` | UI apps only (`quickshell/` here)                              |
 | `~/.config/shroomery`  | Shell scripts, theme sync, user settings, generated colors     |
 | `~/.config/hypr`       | The Hyprland desktop (keybinds, autostart, hyprlock, …)        |
+| `~/.config/matugen`    | matugen config + templates (wallpaper → palette files)         |
+| `install.sh`, `install/` | Installer: `install/steps/NN-name.sh` run in order, `install/lib.sh` helpers, `install/packages/*.txt` |
 
 shroomery layout:
 - `lib.sh` — shared paths/helpers every script sources (mirror of `quickshell/shared/Paths.qml`)
@@ -150,3 +158,8 @@ Run the commands below from `~/.config/quickshell`.
   ignored SIGHUP/SIGINT they pass on makes the signal tests fail falsely. A PATH stub calls the real binary by
   absolute path, never `command <name>` (that finds the stub itself).
 - Shell scripts: `bash -n` at least.
+- Dependencies: `bash install/tests/deps.sh` (`-v` lists what covers each command); run it after adding
+  an external command, a QML import or a Python import.
+- Installer: `./install.sh --dry-run --yes` prints every change without making it. To run steps for real
+  without touching this machine, copy the repo into the scratchpad and run it with `HOME=<scratch>/home`
+  (`--only link,config` needs no sudo).

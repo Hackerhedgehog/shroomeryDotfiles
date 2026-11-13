@@ -23,7 +23,7 @@ const SNAPSHOT = [
   "Filesystem     1024-blocks      Used Available Capacity Mounted on",
   "/dev/nvme1n1p3   531914832 266157244 238664340      53% /",
   "/dev/nvme1n1p1     1098632    360312    738320      33% /boot/efi",
-  "/dev/nvme1n1p2  1387603232 983424476 333618604      75% /home/stenerikmatt/Storage",
+  "/dev/nvme1n1p2  1387603232 983424476 333618604      75% /home/user/Storage",
   "##uptime",
   "47965.25 712832.48",
   ""
@@ -42,7 +42,7 @@ test("parseSnapshot reads every section", () => {
   assert.deepStrictEqual(s.mem, { totalKb: 16217096, availableKb: 9197684, swapTotalKb: 8388604, swapFreeKb: 8000000 });
   assert.deepStrictEqual(s.net, { rx: 36006903067, tx: 964138173 });
   assert.strictEqual(s.tempC, 48.25);
-  assert.deepStrictEqual(s.disks.map(d => d.mount), ["/", "/home/stenerikmatt/Storage"]);
+  assert.deepStrictEqual(s.disks.map(d => d.mount), ["/", "/home/user/Storage"]);
   assert.strictEqual(Math.round(s.disks[0].percent), 50);
   assert.strictEqual(s.uptime, 47965.25);
 });

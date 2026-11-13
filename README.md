@@ -8,28 +8,69 @@ job. This file is the map; every part has its own README with the details.
 | [`hypr/`](hypr/) | The compositor: Hyprland (Lua config), hypridle, hyprlock, hyprpaper, and the small helper scripts keybinds call | the files themselves (`hyprland.lua` includes the rest) |
 | [`quickshell/`](quickshell/) | Everything you see: status bar, dock, launcher, notifications, and every panel/app | [`quickshell/README.md`](quickshell/README.md) |
 | [`shroomery/`](shroomery/) | Everything behind the scenes: wallpaper and theme scripts, background listeners, user settings, the generated palette | [`shroomery/README.md`](shroomery/README.md), [`shroomery/screencolors/README.md`](shroomery/screencolors/README.md) |
+| [`matugen/`](matugen/) | matugen config + templates: turn the wallpaper into palette files for Quickshell, Hyprland, GTK, Qt, kitty, btop | `matugen/config.toml` |
+| [`install/`](install/) | The installer's steps and package lists (`install.sh` runs them) | [Install](#install) below |
 
 Rule of thumb: if it draws UI it goes in `quickshell`; if it is a script, a
 setting or generated data it goes in `shroomery`; if it configures Hyprland
 itself it goes in `hypr`. [`CLAUDE.md`](CLAUDE.md) has the working conventions
 (for Claude and for me).
 
+## Install
+
+On a fresh Arch Linux (base system, a user account, network and `git`):
+
+```bash
+git clone <this repo> ~/.config/shroomeryDotfiles
+~/.config/shroomeryDotfiles/install.sh
+```
+
+Run it as your normal user; it asks for the sudo password in the terminal (on
+a system without sudo it offers to set it up with the root password). Then
+reboot and pick the Hyprland session. The repo can live anywhere — the links
+point at wherever it was cloned.
+
+`install.sh` runs the scripts in `install/steps/` in order:
+
+| Step | Does |
+|------|------|
+| `preflight` | Arch? internet? not root? sudo works (asks the password once) |
+| `packages` | `pacman -Syu` the missing packages of `install/packages/pacman.txt`, builds `yay-bin` if no AUR helper is there, then `install/packages/aur.txt` |
+| `gpu` | Mesa + Vulkan for AMD/Intel; for NVIDIA asks, then `nvidia-open-dkms` (+ kernel headers) and the NVIDIA env in `hypr/custom.lua` (git-ignored) |
+| `link` | Symlinks `hypr`, `quickshell`, `shroomery`, `matugen` into `~/.config`; anything already there is moved to `<name>.bak-<date>` |
+| `config` | Writes GTK 3/4, qt5ct/qt6ct, kitty and cursor configs **only when missing**, paints `WallpaperApp/wallpapers/default.jpg` when there are no wallpapers, and (asked; default yes on a first install) resets the per-machine settings in the repo: `hypr/monitors.lua` to one auto rule, the keyboard layout (`settings/input.json` + `hypr/input.lua`), the visualizer monitor and Hyprland's locale |
+| `services` | Enables NetworkManager (offers to turn off systemd-networkd/dhcpcd/iwd, effective after the reboot), bluetooth, power-profiles-daemon, and SDDM when no login manager is enabled |
+| `finish` | Next steps and the main keybinds |
+
+Options: `-y`/`--yes` (take every default), `-n`/`--dry-run` (print, change
+nothing), `--only STEP,…`, `--skip STEP,…`, `--list`. Every step is safe to
+run again. When a script starts using a new program, add its package to
+`install/packages/pacman.txt` (or `aur.txt`); `bash install/tests/deps.sh`
+checks that every program, QML module and Python module the code uses comes
+from a listed package (or a dependency of one, or `base`).
+
+Wallpapers aren't in git: put images in `~/.config/quickshell/WallpaperApp/wallpapers/`
+(videos/GIFs in its `animated/`).
+
 ## Install layout
 
-The repo lives at `~/shroomeryDotfiles`. Each part is symlinked into
-`~/.config`, and all code and docs use the `~/.config/...` paths:
+On this machine the repo lives at `~/shroomeryDotfiles` (`install.sh` works
+from any clone location). Each part is symlinked into `~/.config`, and all
+code and docs use the `~/.config/...` paths:
 
 ```
 ~/.config/hypr       -> ~/shroomeryDotfiles/hypr
 ~/.config/quickshell -> ~/shroomeryDotfiles/quickshell
 ~/.config/shroomery  -> ~/shroomeryDotfiles/shroomery
+~/.config/matugen    -> ~/shroomeryDotfiles/matugen
 ```
 
 Other places the system touches (none are in the repo):
 
 - `~/.cache/shroomery/` — generated wallpaper variants, weather cache, logs (safe to delete)
 - `$XDG_RUNTIME_DIR/shroomery/` — runtime state (sockets, flags); gone after reboot
-- `~/.config/matugen/` — matugen config and templates that write the palette files
+- matugen's outputs outside the repo: `~/.config/kitty/colors-matugen.conf`, `~/.config/gtk-{3,4}.0/colors.css`,
+  `~/.config/qt{5,6}ct/colors/matugen.conf`, `~/.config/btop/themes/matugen.theme`, `~/.cache/wal/`
 
 ## How it fits together
 

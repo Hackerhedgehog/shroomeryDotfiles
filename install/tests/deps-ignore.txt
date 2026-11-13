@@ -1,0 +1,30 @@
+# Words install/tests/deps.sh must not treat as dependencies, one per line,
+# with the reason after a #. Two kinds:
+
+# --- ordinary words that happen to be program names on some machine ---
+X              # the X key (keybinds), "X" in labels
+count          # a word in code/strings (llvm's `count`)
+not            # a word (llvm's `not`)
+opt            # the /opt path (llvm's `opt`)
+lit            # a word (llvm-lit)
+replace        # JS String.replace (mariadb's `replace`)
+screen         # a word (GNU screen)
+wheel          # mouse wheel (python-wheel)
+route          # "default route" (net-tools' `route`; `ip route` is iproute2)
+less           # a word (less)
+now            # a word
+node           # PipeWire "node" (nodejs)
+pip            # picture-in-picture (hypr/pip.lua), not python-pip
+dialog         # "uninstall dialog" in a message
+cargo          # ~/.cargo/bin path where lib.sh looks for a matugen build
+galculator     # only a window rule for it (hypr/windowrules.lua)
+
+# --- optional programs: used only when installed (the code checks first) ---
+flatpak        # apps.sh / uninstall-app.sh list and remove Flatpak apps if there are any
+steam          # uninstall-app.sh: Steam game shortcuts
+jetbrains-toolbox # uninstall-app.sh: mentioned as an example of an app's own shortcut
+yay            # check-updates.sh: AUR updates through yay or paru when one is installed
+paru           # same
+pywalfox       # lib.sh: re-themes Firefox when pywalfox is installed
+grub-mkconfig  # recovery.sh: the machine's bootloader (assumes GRUB)
+mkinitcpio     # recovery.sh: the machine's initramfs tool (Arch default)
