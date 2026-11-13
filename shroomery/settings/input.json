@@ -1,6 +1,6 @@
 {
     "layout": "ee",
     "variant": "",
-    "speed": 0.75,
-    "scaleWithMonitor": false
+    "speed": 0.563,
+    "scaleWithMonitor": true
 }

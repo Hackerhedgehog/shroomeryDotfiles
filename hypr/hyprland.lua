@@ -28,8 +28,10 @@ require("environments")
 require("decorations")
 require("layouts")
 require("misc")
+require("pip")
 require("keybindings")
 require("windowrules")
+require("unity")
 require("animations")
 
 -- CUSTOM

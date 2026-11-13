@@ -90,6 +90,8 @@ light schedule.
 |------------|-------|
 | change a keybind or window rule | `hypr/keybindings.lua`, `hypr/windowrules.lua` (or the KeybindsApp) |
 | change monitors, idle/lock behavior | `hypr/monitors.lua`, `hypr/hypridle.conf`, `hypr/hyprlock.conf` |
+| change picture-in-picture (Ctrl+Super+V, a pinned see-through window in a corner above fullscreen games) | `hypr/pip.lua` (Hyprland calls), `hypr/piplogic.lua` (geometry, tested by `lua ~/.config/hypr/tests/piplogic.lua`) |
+| change where Unity Editor's floating windows open (under the cursor, held there for 2 s; tooltips/menus only kept on screen) and the asset picker focus fix | `hypr/unity.lua` (rules, placement, follow_mouse switch), `hypr/unitylogic.lua` (geometry, tested by `lua ~/.config/hypr/tests/unitylogic.lua`) |
 | add or change a panel/app | `quickshell/<Name>Panel/` (bar popout) or `quickshell/<Name>App/` (window), shared widgets in `quickshell/shared/ui/` |
 | add a new external path or command a UI uses | `quickshell/shared/Paths.qml`, then update `quickshell/README.md` |
 | change wallpaper/theme behavior | `shroomery/scripts/wallpaper.sh`, `apply-theme.sh`, `shroomery/effects/` |

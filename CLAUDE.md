@@ -38,7 +38,7 @@ shroomery layout:
 - `listeners/` + `listeners.sh` — background watchers (GTK dark/light → re-theme, low battery, AC plug → pause/resume animated wallpaper, night light schedule,
   mouse speed per monitor on Hyprland `focusedmon`, automatic timezone on network connect)
 - `settings/` — user state: `statusbar.json`, `dock.json`, `wallpaper-*`, `accent`, `accent-index`, `accent-scheme`, `weather-location`,
-  `terminal`, `editor`, `launcher`, `launcher-view.json`, `ocr-language`, `visualizer.json`, `night-light.json`, `input.json`, `time.json`, flag files (`gamemode-enabled`, `hide-fastfetch`)
+  `terminal`, `editor`, `launcher`, `launcher-view.json`, `ocr-language`, `visualizer.json`, `night-light.json`, `input.json`, `time.json`, `pip` (written by `hypr/pip.lua`), flag files (`gamemode-enabled`, `hide-fastfetch`)
 - `colors/colors.json` — matugen output, read by `quickshell/shared/Theme.qml`
 - Cache: `~/.cache/shroomery/` (current wallpaper, blurred/square variants for hyprlock/wlogout/LauncherApp)
 
@@ -141,6 +141,8 @@ Run the commands below from `~/.config/quickshell`.
   `touch shell.qml` forces one. `console.log` lines show with `qs log -r "*.debug=true"`.
 - `qs ipc show` lists targets; open/close panels with the app's `toggle.sh` to exercise them.
 - Pure JS unit tests: `node --test shared/ui/tests/ shared/tests/ VisualizerApp/tests/ StatusbarApp/tests/ DashboardPanel/tests/ AudioPanel/tests/ LauncherApp/tests/ KeybindsApp/tests/ BatteryPanel/tests/ SettingsApp/tests/ InputApp/tests/ TimeApp/tests/`.
+- Hyprland Lua helpers: `lua ~/.config/hypr/tests/piplogic.lua` (picture-in-picture geometry), `lua ~/.config/hypr/tests/unitylogic.lua` (Unity asset picker placement). Hyprland Lua can be run live
+  with `hyprctl eval '<lua>'` (or `hyprctl repl '<lua>'` to print a returned value).
 - Shroomery bash helpers: `bash ~/.config/shroomery/tests/night-light.sh`, `bash ~/.config/shroomery/tests/input.sh`, `bash ~/.config/shroomery/tests/time.sh`, `bash ~/.config/shroomery/tests/pkg-update.sh`, `bash ~/.config/shroomery/tests/recovery.sh`.
   Run them capped, in the foreground: `systemd-run --user --scope -p TasksMax=1000 -q bash <test>` (a runaway
   test once used up the terminal's process limit and crashed Claude Code). Not under `nohup` or `&`: the

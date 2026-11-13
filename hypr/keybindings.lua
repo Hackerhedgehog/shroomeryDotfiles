@@ -92,7 +92,18 @@ hl.bind(mainMod .. " + SHIFT + left", hl.dsp.window.swap({ direction = "l" }), {
 hl.bind(mainMod .. " + SHIFT + right", hl.dsp.window.swap({ direction = "r" }), { description = "Swap tiled window right" })
 hl.bind(mainMod .. " + SHIFT + up", hl.dsp.window.swap({ direction = "u" }), { description = "Swap tiled window up" })
 hl.bind(mainMod .. " + SHIFT + down", hl.dsp.window.swap({ direction = "d" }), { description = "Swap tiled window down" })
-hl.bind(mainMod .. " + CONTROL + SHIFT + right", hl.dsp.window.move({ direction = "r" }), { description = "Move tiled window righttq" })
+
+-- Picture-in-picture (pip.lua): a small pinned, see-through window in a screen
+-- corner that stays above fullscreen games.
+hl.bind("CTRL + " .. mainMod .. " + V", function() pip_toggle() end, { description = "Picture-in-picture: make the focused window PiP / stop PiP" })
+hl.bind("CTRL + " .. mainMod .. " + up", function() pip_opacity(1) end, { repeating = true, description = "Picture-in-picture: more opaque (2%)" })
+hl.bind("CTRL + " .. mainMod .. " + down", function() pip_opacity(-1) end, { repeating = true, description = "Picture-in-picture: more transparent (2%)" })
+hl.bind("CTRL + " .. mainMod .. " + right", function() pip_resize(1) end, { repeating = true, description = "Picture-in-picture: bigger" })
+hl.bind("CTRL + " .. mainMod .. " + left", function() pip_resize(-1) end, { repeating = true, description = "Picture-in-picture: smaller" })
+hl.bind("CTRL + SHIFT + " .. mainMod .. " + up", function() pip_corner("up") end, { description = "Picture-in-picture: move to a top corner" })
+hl.bind("CTRL + SHIFT + " .. mainMod .. " + down", function() pip_corner("down") end, { description = "Picture-in-picture: move to a bottom corner" })
+hl.bind("CTRL + SHIFT + " .. mainMod .. " + left", function() pip_corner("left") end, { description = "Picture-in-picture: move to a left corner" })
+hl.bind("CTRL + SHIFT + " .. mainMod .. " + right", function() pip_corner("right") end, { description = "Picture-in-picture: move to a right corner" })
 
 -- Actions
 hl.bind(mainMod .. " + CTRL + R", hl.dsp.exec_cmd("hyprctl reload"), { description = "Reload Hyprland configuration" })

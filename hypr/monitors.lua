@@ -6,6 +6,15 @@ hl.monitor({
   scale = 1,
 })
 hl.monitor({
+  output = "DP-2",
+  mode = "2560x1080@143.95",
+  position = "-2560x365",
+  scale = 1,
+  transform = 0,
+  mirror = "",
+  disabled = false,
+})
+hl.monitor({
   output = "DP-3",
   mode = "3840x2160@144.05",
   position = "0x0",
