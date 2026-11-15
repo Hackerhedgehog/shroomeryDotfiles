@@ -100,10 +100,10 @@ hl.bind("CTRL + " .. mainMod .. " + up", function() pip_opacity(1) end, { repeat
 hl.bind("CTRL + " .. mainMod .. " + down", function() pip_opacity(-1) end, { repeating = true, description = "Picture-in-picture: more transparent (2%)" })
 hl.bind("CTRL + " .. mainMod .. " + right", function() pip_resize(1) end, { repeating = true, description = "Picture-in-picture: bigger" })
 hl.bind("CTRL + " .. mainMod .. " + left", function() pip_resize(-1) end, { repeating = true, description = "Picture-in-picture: smaller" })
-hl.bind("CTRL + SHIFT + " .. mainMod .. " + up", function() pip_corner("up") end, { description = "Picture-in-picture: move to a top corner" })
-hl.bind("CTRL + SHIFT + " .. mainMod .. " + down", function() pip_corner("down") end, { description = "Picture-in-picture: move to a bottom corner" })
-hl.bind("CTRL + SHIFT + " .. mainMod .. " + left", function() pip_corner("left") end, { description = "Picture-in-picture: move to a left corner" })
-hl.bind("CTRL + SHIFT + " .. mainMod .. " + right", function() pip_corner("right") end, { description = "Picture-in-picture: move to a right corner" })
+hl.bind("CTRL + SHIFT + " .. mainMod .. " + up", function() pip_corner("up") end, { description = "Picture-in-picture: move to a top corner (again: to the monitor above)" })
+hl.bind("CTRL + SHIFT + " .. mainMod .. " + down", function() pip_corner("down") end, { description = "Picture-in-picture: move to a bottom corner (again: to the monitor below)" })
+hl.bind("CTRL + SHIFT + " .. mainMod .. " + left", function() pip_corner("left") end, { description = "Picture-in-picture: move to a left corner (again: to the monitor on the left)" })
+hl.bind("CTRL + SHIFT + " .. mainMod .. " + right", function() pip_corner("right") end, { description = "Picture-in-picture: move to a right corner (again: to the monitor on the right)" })
 
 -- Actions
 hl.bind(mainMod .. " + CTRL + R", hl.dsp.exec_cmd("hyprctl reload"), { description = "Reload Hyprland configuration" })

@@ -51,6 +51,33 @@ eq("down from tl", L.move_corner("tl", "down"), "bl")
 eq("right from tl", L.move_corner("tl", "right"), "tr")
 eq("up from tr stays", L.move_corner("tr", "up"), "tr")
 
+-- crossing to another monitor
+eq("at edge right", L.at_edge("br", "right"), true)
+eq("not at edge left", L.at_edge("br", "left"), false)
+eq("at edge up", L.at_edge("tl", "up"), true)
+eq("entry going right", L.entry_corner("br", "right"), "bl")
+eq("entry going left", L.entry_corner("tl", "left"), "tr")
+eq("entry going up", L.entry_corner("tr", "up"), "br")
+eq("entry going down", L.entry_corner("bl", "down"), "tl")
+-- 4K@1.5 at 0,0 (2560x1440) with a 2560x1080 monitor on its left at -2560,365
+local mons = { { x = 0, y = 0, w = 2560, h = 1440 }, { x = -2560, y = 365, w = 2560, h = 1080 } }
+eq("neighbor left", L.neighbor(mons, 1, "left"), 2)
+eq("no neighbor right", L.neighbor(mons, 1, "right"), nil)
+eq("neighbor back right", L.neighbor(mons, 2, "right"), 1)
+eq("no neighbor up", L.neighbor(mons, 1, "up"), nil)
+eq("no neighbor of single", L.neighbor({ mons[1] }, 1, "left"), nil)
+-- three in a row: the nearest one wins
+local row = { { x = 0, y = 0, w = 1920, h = 1080 }, { x = 1920, y = 0, w = 1920, h = 1080 }, { x = 3840, y = 0, w = 1920, h = 1080 } }
+eq("nearest right", L.neighbor(row, 1, "right"), 2)
+eq("nearest left", L.neighbor(row, 3, "left"), 2)
+-- stacked: one above
+local stack = { { x = 0, y = 1080, w = 1920, h = 1080 }, { x = 0, y = 0, w = 1920, h = 1080 } }
+eq("neighbor up", L.neighbor(stack, 1, "up"), 2)
+eq("neighbor down", L.neighbor(stack, 2, "down"), 1)
+eq("stacked no right", L.neighbor(stack, 1, "right"), nil)
+-- fractional rounding slack: right monitor starts 1 px inside
+eq("slack", L.neighbor({ { x = 0, y = 0, w = 1706.67, h = 960 }, { x = 1706, y = 0, w = 1920, h = 1080 } }, 1, "right"), 2)
+
 -- area: 4K at scale 1.5 (the bar's reserved space is not subtracted)
 local mon = { x = 0, y = 0, width = 3840, height = 2160, scale = 1.5, transform = 0 }
 local a = L.screen_area(mon)

@@ -62,6 +62,62 @@ function M.move_corner(corner, direction)
     return v .. h
 end
 
+-- True when the corner already sits on the `direction` side (pressing it again
+-- leaves the corner as it is, so the PiP should go to the next monitor).
+function M.at_edge(corner, direction)
+    local v, h = corner:sub(1, 1), corner:sub(2, 2)
+    return (direction == "up" and v == "t") or (direction == "down" and v == "b")
+        or (direction == "left" and h == "l") or (direction == "right" and h == "r")
+end
+
+-- Corner on the monitor the PiP enters when it crosses in `direction`: the side
+-- it comes in from (going right it lands in a left corner), the other half kept.
+function M.entry_corner(corner, direction)
+    local v, h = corner:sub(1, 1), corner:sub(2, 2)
+    if direction == "up" then v = "b"
+    elseif direction == "down" then v = "t"
+    elseif direction == "left" then h = "r"
+    elseif direction == "right" then h = "l" end
+    return v .. h
+end
+
+-- Index of the monitor next to areas[cur] in `direction`, or nil. A monitor
+-- counts when it lies wholly past that edge (2 px slack for rounding); the one
+-- with the smallest gap wins, ties go to the one best lined up on the other axis.
+-- areas = { { x, y, w, h }, ... } (screen_area of each monitor)
+function M.neighbor(areas, cur, direction)
+    local c = areas[cur]
+    if not c then return nil end
+    local SLACK = 2
+    local best, best_gap, best_off
+    for i, a in ipairs(areas) do
+        if i ~= cur then
+            local gap, off
+            if direction == "right" then
+                gap = a.x - (c.x + c.w)
+            elseif direction == "left" then
+                gap = c.x - (a.x + a.w)
+            elseif direction == "down" then
+                gap = a.y - (c.y + c.h)
+            elseif direction == "up" then
+                gap = c.y - (a.y + a.h)
+            end
+            if direction == "left" or direction == "right" then
+                off = math.abs((a.y + a.h / 2) - (c.y + c.h / 2))
+            else
+                off = math.abs((a.x + a.w / 2) - (c.x + c.w / 2))
+            end
+            if gap and gap >= -SLACK then
+                gap = math.max(gap, 0)
+                if not best or gap < best_gap or (gap == best_gap and off < best_off) then
+                    best, best_gap, best_off = i, gap, off
+                end
+            end
+        end
+    end
+    return best
+end
+
 -- The whole monitor in global logical coordinates (scaled, rotated). The space
 -- the bar reserves is ignored on purpose: the PiP sits in the real screen corner
 -- (over a fullscreen game the bar isn't there anyway).

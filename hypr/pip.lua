@@ -50,13 +50,17 @@ local function pip_window()
     return nil
 end
 
-local function area_of(win)
-    local m = win.monitor or hl.get_active_monitor()
-    if not m then return nil end
+local function monitor_area(m)
     return L.screen_area({
         x = m.x, y = m.y, width = m.width, height = m.height,
         scale = m.scale, transform = m.transform,
     })
+end
+
+local function area_of(win)
+    local m = win.monitor or hl.get_active_monitor()
+    if not m then return nil end
+    return monitor_area(m)
 end
 
 local function set_prop(win, prop, value)
@@ -72,6 +76,35 @@ local function apply_opacity(win, opacity)
     set_prop(win, "opacity_inactive_override", "1")
 end
 
+-- No blur on the PiP: with decoration.blur.xray a blurred floating window shows
+-- the wallpaper through itself instead of the windows below it.
+local function apply_props(win, opacity)
+    set_prop(win, "keep_aspect_ratio", "1")
+    set_prop(win, "no_blur", "1")
+    apply_opacity(win, opacity)
+end
+
+-- While a PiP exists, resizing by dragging a window border is off (Hyprland has
+-- no per-window switch): over a game the cursor often rests on the PiP's border
+-- and a click there started a resize. Super+right-drag still resizes.
+-- The configured value is kept here; a config reload rebuilds this state and
+-- resets the option, so config.reloaded below takes it again.
+local saved_resize_on_border = nil
+
+local function hold_border_resize()
+    if saved_resize_on_border == nil then
+        saved_resize_on_border = hl.get_config("general.resize_on_border")
+    end
+    hl.config({ general = { resize_on_border = false } })
+end
+
+local function release_border_resize()
+    if saved_resize_on_border ~= nil then
+        hl.config({ general = { resize_on_border = saved_resize_on_border } })
+        saved_resize_on_border = nil
+    end
+end
+
 -- The record for this PiP window, or nil.
 local function record_of(win)
     local r = L.parse_restore(read_file(RESTORE_FILE))
@@ -79,9 +112,10 @@ local function record_of(win)
     return nil
 end
 
--- Size from the settings at the aspect ratio fixed when the PiP started, snapped to the corner.
-local function place(win, s)
-    local area = area_of(win)
+-- Size from the settings at the aspect ratio fixed when the PiP started, snapped
+-- to the corner of `area` (default: the window's monitor).
+local function place(win, s, area)
+    area = area or area_of(win)
     if not area then return end
     local r = record_of(win)
     local aspect = r and r.aspect or (win.size.x / math.max(win.size.y, 1))
@@ -106,8 +140,8 @@ local function start(win)
     hl.dispatch(hl.dsp.window.tag({ window = sel(win), tag = "+" .. TAG }))
     hl.dispatch(hl.dsp.window.float({ window = sel(win), action = "enable" }))
     hl.dispatch(hl.dsp.window.pin({ window = sel(win), action = "enable" }))
-    set_prop(win, "keep_aspect_ratio", "1")
-    apply_opacity(win, s.opacity)
+    apply_props(win, s.opacity)
+    hold_border_resize()
     place(win, s)
 end
 
@@ -115,6 +149,8 @@ local function stop(win)
     local r = record_of(win)
     hl.dispatch(hl.dsp.window.tag({ window = sel(win), tag = "-" .. TAG }))
     set_prop(win, "keep_aspect_ratio", "0")
+    set_prop(win, "no_blur", "0")
+    release_border_resize()
     -- Float props can't be "unset": opacity multiplier 1 without override = the normal decoration opacity.
     set_prop(win, "opacity", "1.0")
     set_prop(win, "opacity_inactive", "1.0")
@@ -168,11 +204,39 @@ function pip_resize(dir)
     place(win, s)
 end
 
--- direction: "up" | "down" | "left" | "right"
+-- Move the PiP onto monitor `m`: a coordinate move alone leaves it assigned to
+-- the old monitor, so it first goes (silently) to the workspace shown there.
+local function move_to_monitor(win, m)
+    local ws = hl.get_active_workspace(m.name)
+    if ws then
+        hl.dispatch(hl.dsp.window.move({ window = sel(win),
+            workspace = L.workspace_selector(ws.id, ws.name, ws.special), follow = false }))
+    end
+end
+
+-- direction: "up" | "down" | "left" | "right". Already in a corner on that side:
+-- cross to the monitor next to this one on that side, if there is one, entering
+-- at the near corner (going right from a right corner lands in a left corner).
 function pip_corner(direction)
     local win = pip_window()
     if not win then return end
     local s = load_settings()
+    if L.at_edge(s.corner, direction) then
+        local monitors = hl.get_monitors()
+        local areas, cur = {}, nil
+        local own = win.monitor and win.monitor.name
+        for i, m in ipairs(monitors) do
+            areas[i] = monitor_area(m)
+            if m.name == own then cur = i end
+        end
+        local next = cur and L.neighbor(areas, cur, direction)
+        if not next then return end
+        s.corner = L.entry_corner(s.corner, direction)
+        save_settings(s)
+        move_to_monitor(win, monitors[next])
+        place(win, s, areas[next])
+        return
+    end
     s.corner = L.move_corner(s.corner, direction)
     save_settings(s)
     place(win, s)
@@ -183,7 +247,17 @@ end
 hl.on("config.reloaded", function()
     local win = pip_window()
     if win then
-        set_prop(win, "keep_aspect_ratio", "1")
-        apply_opacity(win, load_settings().opacity)
+        apply_props(win, load_settings().opacity)
+        hold_border_resize()
+    end
+end)
+
+-- The PiP window closed while PiP: border resizing back on, record gone.
+hl.on("window.close", function(win)
+    if not win then return end
+    local r = L.parse_restore(read_file(RESTORE_FILE))
+    if r and r.address == win.address then
+        release_border_resize()
+        os.remove(RESTORE_FILE)
     end
 end)
