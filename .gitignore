@@ -1,5 +1,13 @@
 # quickshell
-quickshell/WallpaperApp/wallpapers/
+# The wallpaper folders ship with two starter images (Chainsaw Man.jpg is the
+# default, see shroomery/settings/wallpaper-default); anything else put in them,
+# animated wallpapers included, stays local.
+quickshell/WallpaperApp/wallpapers/*
+!quickshell/WallpaperApp/wallpapers/Chainsaw Man.jpg
+!quickshell/WallpaperApp/wallpapers/Chainsaw Man 4.png
+!quickshell/WallpaperApp/wallpapers/animated/
+quickshell/WallpaperApp/wallpapers/animated/*
+!quickshell/WallpaperApp/wallpapers/animated/.gitkeep
 quickshell/.superpowers/
 quickshell/docs/superpowers/
 

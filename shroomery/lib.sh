@@ -149,10 +149,16 @@ wait_for_awww() {
     done
 }
 
-# The fallback wallpaper: default.* in the wallpaper folder, else its first image.
+# The fallback wallpaper: the file settings/wallpaper-default names in the
+# wallpaper folder, else default.* there, else its first image.
 default_wallpaper() {
-    local folder
+    local folder name
     folder=$(wallpaper_folder)
+    name=$(setting wallpaper-default "")
+    if [ -n "$name" ] && [ -f "$folder/$name" ]; then
+        printf '%s\n' "$folder/$name"
+        return
+    fi
     find "$folder" -maxdepth 1 -type f \( "${IMAGE_FIND_ARGS[@]}" \) 2>/dev/null \
         | sort | awk -F/ '{ if ($NF ~ /^default\./) { print; found=1; exit } else if (!first) first=$0 } END { if (!found && first) print first }'
 }

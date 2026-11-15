@@ -72,8 +72,9 @@ include colors-matugen.conf
 EOF
 
 # --- a wallpaper to start from -----------------------------------------------
-# The wallpaper folder isn't in git. With nothing in it, the theme pipeline has
-# no image to take colors from, so paint one: blurred clouds in two tones, a
+# The repo ships two wallpapers (settings/wallpaper-default picks the first one
+# set). When the folder is still empty (a custom wallpaper-folder, or they were
+# deleted), the theme pipeline has no image to take colors from, so paint one: blurred clouds in two tones, a
 # dark base and a warm accent for matugen to build the palette around.
 # (shroomery/lib.sh in a subshell: it has its own info/warn helpers)
 shroomery_lib() { bash -c 'source "$1" && "$2"' _ "$SHROOMERY/lib.sh" "$1" 2>/dev/null; }
